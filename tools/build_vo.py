@@ -19,7 +19,7 @@ from pathlib import Path
 import numpy as np
 
 ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "animatic" / "vo" / "vo.js"
+OUT = ROOT / "animatic" / "vo" / "part-01.js"
 SR = 48000
 
 # id, voice, rate %, chain, text
