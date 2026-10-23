@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Build the scratch voice-over for the Part 1 animatic.
+
+Synthesizes each line with RHVoice, runs it through a per-character effect
+chain (radio, TV speaker, whisper), and writes animatic/vo/vo.js: base64 MP3s
+the animatic loads without a server.
+
+Needs: RHVoice (rhvoice + rhvoice-english), sox, ffmpeg, numpy.
+    sudo apt-get install rhvoice rhvoice-english sox ffmpeg
+    python3 tools/build_vo.py
+"""
+import base64
+import json
+import subprocess
+import tempfile
+import wave
+from pathlib import Path
+
+import numpy as np
+
+ROOT = Path(__file__).resolve().parent.parent
+OUT = ROOT / "animatic" / "vo" / "vo.js"
+SR = 48000
+
+# id, voice, rate %, chain, text
+LINES = [
+    ("anchor", "slt", 130, "tv", "Breaking news. A zombie outbreak in downtown Ashford. Stay indoors."),
+    ("daniel1", "bdl", 100, "dry", "It'll pass. It always does."),
+    ("daniel2", "bdl", 95, "whisper", "Darn it... I'm running out."),
+    ("ward1", "alan", 88, "radio", "Daniel Hayes... if you can hear this... don't leave the farmhouse."),
+    ("ward2", "alan", 85, "radio", "You've been infected... since day one."),
+]
+
+
+def sh(*cmd, inp=None):
+    subprocess.run(cmd, input=inp, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def read(path):
+    with wave.open(str(path)) as w:
+        x = np.frombuffer(w.readframes(w.getnframes()), dtype=np.int16).astype(np.float32) / 32768
+        return x if w.getnchannels() == 1 else x.reshape(-1, w.getnchannels()).mean(axis=1)
+
+
+def write(path, x):
+    x = np.clip(x, -1, 1)
+    with wave.open(str(path), "wb") as w:
+        w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR)
+        w.writeframes((x * 32767).astype(np.int16).tobytes())
+
+
+def whisperize(x, rng):
+    """Keep the spectral envelope, throw away the pitch: random-phase STFT resynthesis."""
+    n, hop = 1024, 256
+    win = np.hanning(n).astype(np.float32)
+    pad = np.concatenate([np.zeros(n), x, np.zeros(n)])
+    out = np.zeros_like(pad); norm = np.zeros_like(pad)
+    for i in range(0, len(pad) - n, hop):
+        spec = np.fft.rfft(pad[i:i + n] * win)
+        mag = np.abs(spec)
+        phase = rng.uniform(-np.pi, np.pi, mag.shape)
+        frame = np.fft.irfft(mag * np.exp(1j * phase), n) * win
+        out[i:i + n] += frame; norm[i:i + n] += win ** 2
+    return (out / np.maximum(norm, 1e-3))[n:n + len(x)]
+
+
+def radio_texture(x, rng):
+    """Carrier flutter, static hiss and crackle on top of the band-limited voice."""
+    t = np.arange(len(x)) / SR
+    flutter = 1 + 0.12 * np.sin(2 * np.pi * 6.3 * t) + 0.06 * np.sin(2 * np.pi * 0.7 * t + 1)
+    hiss = rng.normal(0, 1, len(x)).astype(np.float32)
+    hiss = np.convolve(hiss, np.ones(3) / 3, mode="same") * 0.035
+    crackle = np.zeros(len(x), np.float32)
+    for pos in rng.integers(0, len(x), size=int(len(x) / SR * 9)):
+        k = int(rng.integers(20, 160))
+        crackle[pos:pos + k] += rng.normal(0, 0.25, len(crackle[pos:pos + k])) * np.exp(-np.arange(len(crackle[pos:pos + k])) / 30)
+    return x * flutter + hiss + crackle
+
+
+def build(tmp, lid, voice, rate, chain, text, rng):
+    raw, base, fx = tmp / f"{lid}_raw.wav", tmp / f"{lid}_base.wav", tmp / f"{lid}_fx.wav"
+    sh("RHVoice-test", "-p", voice, "-R", str(SR), "-r", str(rate), "-o", str(raw), inp=text.encode())
+    # trim head/tail silence, normalise
+    sh("sox", str(raw), "-r", str(SR), str(base), "silence", "1", "0.02", "0.5%", "reverse", "silence", "1", "0.02", "0.5%", "reverse", "gain", "-n", "-3")
+    if chain == "dry":
+        sh("sox", str(base), str(fx), "highpass", "80", "compand", "0.02,0.2", "-60,-60,-30,-18,0,-8", "-3", "reverb", "12", "50", "40", "gain", "-n", "-4")
+    elif chain == "tv":
+        # small TV speaker across the room
+        sh("sox", str(base), str(fx), "highpass", "260", "lowpass", "4200", "overdrive", "4", "reverb", "35", "50", "60", "gain", "-n", "-6")
+    elif chain == "whisper":
+        w = whisperize(read(base), rng)
+        write(fx, w)
+        sh("sox", str(fx), str(tmp / f"{lid}_w.wav"), "highpass", "350", "treble", "+4", "reverb", "8", "gain", "-n", "-8")
+        fx = tmp / f"{lid}_w.wav"
+    elif chain == "radio":
+        # deeper, then an AM-radio band, driven speaker, flutter + static
+        sh("sox", str(base), str(tmp / f"{lid}_b.wav"), "pitch", "-180", "highpass", "380", "lowpass", "2900", "overdrive", "14", "gain", "-n", "-4")
+        write(fx, radio_texture(read(tmp / f"{lid}_b.wav"), rng))
+        sh("sox", str(fx), str(tmp / f"{lid}_r.wav"), "highpass", "300", "lowpass", "3400", "gain", "-n", "-3")
+        fx = tmp / f"{lid}_r.wav"
+    mp3 = tmp / f"{lid}.mp3"
+    sh("ffmpeg", "-y", "-i", str(fx), "-ac", "1", "-ar", str(SR), "-c:a", "libmp3lame", "-b:a", "160k", str(mp3))
+    dur = len(read(fx)) / SR
+    return base64.b64encode(mp3.read_bytes()).decode(), dur
+
+
+def main():
+    rng = np.random.default_rng(7)
+    data = {}
+    with tempfile.TemporaryDirectory() as d:
+        for lid, voice, rate, chain, text in LINES:
+            b64, dur = build(Path(d), lid, voice, rate, chain, text, rng)
+            data[lid] = {"dur": round(dur, 3), "mp3": b64}
+            print(f"{lid:8s} {dur:5.2f}s  {text}")
+    OUT.parent.mkdir(parents=True, exist_ok=True)
+    OUT.write_text("// Generated by tools/build_vo.py. Do not edit by hand.\nwindow.VO_DATA = " + json.dumps(data) + ";\n")
+    print(f"wrote {OUT.relative_to(ROOT)} ({OUT.stat().st_size // 1024} KB)")
+
+
+if __name__ == "__main__":
+    main()
