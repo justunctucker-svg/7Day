@@ -3,7 +3,7 @@
 **Format:** 2D animated short **Runtime:** ~60 seconds
 **Dialogue:** Ward only. Ward's voice now comes out of the double's mouth in the room, and at the very end it plays from a radio somewhere else, filtered again.
 
-**Status:** DRAFT for approval. No animatic yet.
+Playable animatic: [`animatic/part-05.html`](../animatic/part-05.html) (open in any browser, press Space).
 
 ---
 
@@ -36,6 +36,34 @@
 | 00:58–01:00 | **The cliffhanger** | Black. The title card, but the number has changed. | Silence, then one heartbeat at 60 bpm, the original tempo. | `PATIENT 08 — TO BE CONTINUED` |
 
 ---
+
+## Shot list (as cut in the animatic)
+
+| # | In | Out | Shot | Notes |
+|---|---|---|---|---|
+| 01 | 00:00.0 | 00:02.2 | Split two-shot | Part 4's last frame thaws from grey; the barrels tremble; the double's smile widens |
+| 02 | 00:02.2 | 00:05.0 | CU the double | Ward 1, in the room (00:02.4): "Go on. One of us is the copy." |
+| 03 | 00:05.0 | 00:06.4 | ECU Daniel's eyes | They flick to the monitor wall |
+| 04 | 00:06.4 | 00:12.0 | CU the 07 monitor | One trace splits into two identical ones: 07-A, 07-B. ORIGINAL: — |
+| 05 | 00:12.0 | 00:13.4 | The hatch, inside | BANG: it buckles inward |
+| 06 | 00:13.4 | 00:15.0 | Split two-shot | Both glance at the hatch; neither gun moves |
+| 07 | 00:15.0 | 00:18.0 | The hatch | Blows coming faster; the bolts bend; the steel cracks |
+| 08 | 00:18.0 | 00:21.0 | Two forearms, stacked | Part 1's arm framing, twice: identical marks pulsing in unison |
+| 09 | 00:21.0 | 00:24.8 | CU the double | Head tilted to the hatch. Ward 2 (00:21.2): "They follow the mark. Only one of us walks out." |
+| 10 | 00:24.8 | 00:26.0 | CU Daniel | Resolve |
+| 11 | 00:26.0 | 00:27.0 | The hatch | Breach: it blows in |
+| 12 | 00:27.0 | 00:29.0 | WS bunker | The tubes burst far to near, racing at camera; black |
+| 13 | 00:29.0 | 00:32.0 | Black | Teal eyes flood in from every edge |
+| 14 | 00:32.0 | 00:40.4 | Black | Two marks grappling, circling and crossing; impacts flash between them |
+| 15 | 00:40.4 | 00:41.6 | White, then black | The shot; ringing |
+| 16 | 00:41.6 | 00:44.0 | WS bunker, red | Emergency light stutters on: one down, one standing, gun smoking |
+| 17 | 00:44.0 | 00:47.6 | The doorway, red | The infected fill it, stop, and bow their heads in unison |
+| 18 | 00:47.6 | 00:50.0 | CU the console dial | CH 07 clicks over to CH 08 (00:49.0) |
+| 19 | 00:50.0 | 00:52.8 | CU the survivor, red | Eyes in shadow. Ward 3 (00:50.3): "Eight... can you hear me?" |
+| 20 | 00:52.8 | 00:55.0 | ECU an eye opening | Part 1's first shot, but a woman's eye, green iris; the clock resets to 60 bpm |
+| 21 | 00:55.0 | 00:56.2 | CU her forearm | Part 1's arm framing: a tiny fresh puncture mark, same spot |
+| 22 | 00:56.2 | 00:58.8 | WS her bedroom, dawn | The radio's light blinks. Ward 4, filtered (00:56.5): "...don't leave the farmhouse." `DAY ONE` |
+| 23 | 00:58.8 | 01:00.0 | Black, title | `PATIENT 08 — TO BE CONTINUED`; one heartbeat at 60 bpm |
 
 ## Why the cliffhanger lands
 

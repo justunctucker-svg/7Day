@@ -62,7 +62,7 @@ function drawForearm(o) {
   g.lineWidth = 18;
   for (let i = 0; i < 5; i++) { g.beginPath(); g.moveTo(-50, 560 + i * 40); g.bezierCurveTo(400, 520 + i * 50, 800, 640 + i * 20, 1330, 560 + i * 35); g.stroke(); }
   // forearm
-  g.fillStyle = vgrad(290, 480, ["#e2b28c", "#c9926c", "#9c6b4e"]);
+  g.fillStyle = vgrad(290, 480, o.skin || ["#e2b28c", "#c9926c", "#9c6b4e"]);
   g.beginPath();
   g.moveTo(-40, 282);
   g.bezierCurveTo(300, 270, 700, 318, 1040, 330);
@@ -70,7 +70,7 @@ function drawForearm(o) {
   g.bezierCurveTo(700, 452, 300, 488, -40, 498);
   g.closePath(); g.fill();
   // hand
-  g.fillStyle = "#d6a27c";
+  g.fillStyle = o.skin ? o.skin[0] : "#d6a27c";
   ellipse(1150, 392, 150, 78, 0.04);
   g.fillStyle = "rgba(0,0,0,.12)";
   for (let i = 0; i < 3; i++) ellipse(1225 + i * 2, 350 + i * 30, 70, 9, 0.1);
@@ -664,7 +664,7 @@ function renderShot(t) {
   g.fillStyle = g.createPattern(grain, "repeat"); g.fillRect(0, 0, fw + 256, H + 256);
   g.restore();
   // 9:16 overlays sit inside the platform safe zones (clear of the top bar and the caption/buttons area)
-  if (stamps) for (const [text, slt, so] of stamps) stamp(text, slt, { ...so, at: so.small ? [30, 452] : [36, 128], k: so.small ? 0.9 : 0.85 });
+  if (stamps) for (const [text, slt, so] of stamps) stamp(text, slt, { ...so, at: so.vat || (so.small ? [30, 452] : [36, 128]), k: so.small ? 0.9 : 0.85 });
   if (vert && s.vover) s.vover(lt, t);
   g.restore();
   return s;

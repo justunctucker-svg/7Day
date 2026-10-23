@@ -45,6 +45,12 @@ PARTS = {
         ("ward3", "alan", 100, "walkie", "Don't stop. Whatever you hear."),
         ("ward4", "alan", 78, "room", "Hello... Seven."),
     ]),
+    5: (11, [
+        ("ward1", "alan", 84, "room", "Go on. One of us is the copy."),
+        ("ward2", "alan", 86, "room", "They follow the mark. Only one of us walks out."),
+        ("ward3", "alan", 78, "room", "Eight... can you hear me?"),
+        ("ward4", "alan", 86, "radio", "...don't leave the farmhouse."),
+    ]),
 }
 
 

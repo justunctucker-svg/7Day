@@ -5,26 +5,7 @@
 // ---------------------------------------------------------------------------
 const SHOTS = [
   { a: 0, b: 3, name: "Eye opens", vx: 640, desc: "ECU, black to pre-dawn. Breathing, clock.", draw(lt) {
-    g.fillStyle = "#3b3740"; g.fillRect(0, 0, W, H);
-    let open = ease(seg(lt, 0.5, 1.7));
-    if (lt > 2.05 && lt < 2.3) open *= 0.1;
-    g.save(); g.translate(640, 370);
-    g.fillStyle = "#4a3e3c"; ellipse(0, -10, 520, 230);
-    g.save(); g.beginPath(); g.ellipse(0, 0, 440, Math.max(1, 175 * open), 0, 0, Math.PI * 2); g.clip();
-    g.fillStyle = "#e6ded2"; g.fillRect(-460, -200, 920, 400);
-    g.strokeStyle = "rgba(170,60,60,.35)"; g.lineWidth = 2;
-    for (let i = 0; i < 8; i++) { g.beginPath(); g.moveTo(-420 + (i % 2) * 840, -40 + i * 12); g.quadraticCurveTo(-300 + (i % 2) * 600, i * 8, -230 + (i % 2) * 460, 10); g.stroke(); }
-    const gr = g.createRadialGradient(0, 0, 20, 0, 0, 150); gr.addColorStop(0, "#8a5a32"); gr.addColorStop(1, "#3c2412");
-    g.fillStyle = gr; circle(0, 0, 150);
-    g.fillStyle = "#0a0605"; circle(0, 0, lerp(78, 54, seg(lt, 1.2, 2.8)));
-    g.fillStyle = "rgba(255,255,255,.75)"; g.fillRect(40, -80, 34, 44);
-    g.restore();
-    g.strokeStyle = "#2a201e"; g.lineWidth = 10;
-    g.beginPath(); g.ellipse(0, 0, 446, Math.max(1, 180 * open), 0, Math.PI * 1.02, Math.PI * 1.98); g.stroke();
-    g.lineWidth = 6; g.beginPath(); g.ellipse(0, -40, 470, 200, 0, Math.PI * 1.1, Math.PI * 1.9); g.stroke();
-    g.restore();
-    fill("#3f5a8e", 0.42, "multiply");
-    fill("#000", 1 - seg(lt, 0, 0.9));
+    eyeOpen(lt);
   } },
   { a: 3, b: 5, name: "Puncture mark", vx: MARK.x, desc: "CU forearm. Mark plant: rub, shrug, sleeve down.", mark: true, draw(lt) {
     drawForearm({ grade: "dawn", glow: 0, pulse: 0, rub: seg(lt, 0.85, 0.95) * (1 - seg(lt, 1.35, 1.45)), rubPhase: lt, sleeve: ease(seg(lt, 1.45, 1.95)) });

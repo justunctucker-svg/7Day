@@ -297,13 +297,155 @@ function gunHands(x, y, s, rot, t, tremble) {
   g.restore();
 }
 
+// --- from Part 4: heartbeat clock, tunnel, hatch, bunker, monitors, mirror two-shot; Part 1 eye
+// A heartbeat clock with a changing tempo (Parts 4+). bpmAt(t) -> bpm; phase is its integral.
+const beatShape = p => Math.exp(-((p / 0.07) ** 2)) + 0.65 * Math.exp(-(((p - 0.27) / 0.07) ** 2));
+function makeClock(bpmAt) {
+  const dt = 0.005, n = Math.ceil(61 / dt) + 2, a = new Float64Array(n);
+  for (let i = 1; i < n; i++) a[i] = a[i - 1] + bpmAt((i - 0.5) * dt) / 60 * dt;
+  const phaseAt = t => { const x = clamp(t, 0, 60.99) / dt, i = Math.floor(x); return lerp(a[i], a[i + 1], x - i); };
+  return {
+    phaseAt,
+    periodAt: t => 60 / bpmAt(t),
+    heartbeat: t => beatShape(((phaseAt(t) % 1) + 1) % 1),
+    beats(end) { const out = []; let k = 1; for (let t = 0; t < end; t += 0.002) if (phaseAt(t) >= k) { out.push(t); k++; } return out; },
+  };
+}
+
+// Looking down the tunnel: irregular rings of dirt shrinking to a vanishing point
+function tunnelPOV(t, o = {}) {
+  g.fillStyle = "#040302"; g.fillRect(0, 0, W, H);
+  const cx = 640 + (o.dx || 0), cy = 390 + (o.dy || 0);
+  for (let i = 0; i < 16; i++) {
+    const k = 1 - i / 16, rx = 820 * k * k + 24, ry = 520 * k * k + 16;
+    const c = o.flash ? [lerp(250, 120, i / 16), lerp(235, 100, i / 16), lerp(210, 80, i / 16)] : [lerp(58, 8, i / 16), lerp(40, 5, i / 16), lerp(24, 3, i / 16)];
+    g.fillStyle = `rgb(${c.map(Math.round).join(",")})`;
+    g.beginPath();
+    for (let j = 0; j <= 28; j++) { const a = j / 28 * Math.PI * 2, w = 1 + 0.07 * Math.sin(j * 1.7 + i * 2.3); const x = cx + Math.cos(a) * rx * w, y = cy + Math.sin(a) * ry * w; j ? g.lineTo(x, y) : g.moveTo(x, y); }
+    g.fill();
+  }
+  if (!o.flash) {
+    g.strokeStyle = "rgba(10,6,3,.7)"; g.lineWidth = 3;
+    for (const [x, y] of [[260, 300], [980, 260], [1050, 520]]) for (let k = 0; k < 5; k++) { g.beginPath(); g.moveTo(x + k * 12, y); g.lineTo(x + k * 12 + 4, y + 46); g.stroke(); }
+    g.fillStyle = "rgba(10,6,3,.7)"; g.font = "900 56px \"Courier New\", monospace"; g.fillText("07", 150, 520); g.fillText("07", 1010, 380);
+  }
+}
+
+function hatch(t, o = {}) {
+  tunnelPOV(t);
+  const cx = 640, cy = 390, R = 250, open = o.open || 0;
+  g.fillStyle = "#050403"; circle(cx, cy, R + 26);
+  if (open > 0) { glow(cx, cy, 600, "rgba(235,250,245,1)", 0.9 * open); g.fillStyle = `rgba(240,250,248,${open})`; circle(cx, cy, R); }
+  g.save(); g.translate(cx - R, 0); g.scale(1 - open * 0.92, 1); g.translate(-(cx - R), 0);
+  const gr = g.createLinearGradient(cx - R, cy - R, cx + R, cy + R); gr.addColorStop(0, "#6a7076"); gr.addColorStop(1, "#33383c");
+  g.fillStyle = gr; circle(cx, cy, R);
+  g.strokeStyle = "#24282b"; g.lineWidth = 10; g.beginPath(); g.arc(cx, cy, R - 16, 0, Math.PI * 2); g.stroke();
+  g.fillStyle = "#24282b"; for (let i = 0; i < 16; i++) { const a = i / 16 * Math.PI * 2; circle(cx + Math.cos(a) * (R - 16), cy + Math.sin(a) * (R - 16), 5); }
+  g.fillStyle = "#d9b23a"; g.fillRect(cx - 180, cy - 112, 360, 54);
+  g.fillStyle = "#1a1a1a"; g.font = "900 30px \"Courier New\", monospace"; g.textAlign = "center"; g.textBaseline = "middle";
+  g.fillText("PROJECT ECHO — 07", cx, cy - 84); g.textAlign = "left";
+  // bolts slide back one by one
+  for (let i = 0; i < 3; i++) { const back = ease(seg(o.bolts || 0, i / 3, i / 3 + 0.2)); g.fillStyle = "#2a2e31"; g.fillRect(cx + R - 70 - back * 90, cy - 40 + i * 46, 110, 22); }
+  // scanner plate, pulsing on the heartbeat until it accepts
+  const acc = o.accept || 0, hb = heartbeat(t);
+  g.fillStyle = "#15181a"; rrect(cx + 40, cy + 30, 96, 120, 10);
+  g.fillStyle = acc > 0 ? `rgba(240,255,250,${0.6 + 0.4 * acc})` : `rgba(95,227,192,${0.25 + 0.55 * hb})`; rrect(cx + 52, cy + 42, 72, 96, 6);
+  glow(cx + 88, cy + 90, 120, acc > 0 ? "rgba(240,255,250,1)" : TEAL, 0.25 + 0.4 * (acc || hb));
+  g.restore();
+}
+
+// Bunker in perspective: vanishing point, beds down both sides, fluorescent tubes
+const VP = [640, 330], FOC = 330;
+const P3 = (X, Y, Z) => [VP[0] + X * FOC / Z, VP[1] + Y * FOC / Z];
+function quad(pts, fillStyle) { g.fillStyle = fillStyle; g.beginPath(); pts.forEach(([x, y], i) => i ? g.lineTo(x, y) : g.moveTo(x, y)); g.closePath(); g.fill(); }
+function bunker(t, on) {
+  const lit = on.filter(Boolean).length / on.length;
+  const shade = (c, k) => `rgb(${c.map(v => Math.round(v * (0.12 + 0.88 * k))).join(",")})`;
+  g.fillStyle = shade([150, 160, 158], lit); g.fillRect(0, 0, W, H);
+  quad([P3(-2.2, 1, 0.9), P3(2.2, 1, 0.9), P3(2.2, 1, 13), P3(-2.2, 1, 13)], shade([140, 150, 148], lit));
+  quad([P3(-2.2, -1.2, 0.9), P3(2.2, -1.2, 0.9), P3(2.2, -1.2, 13), P3(-2.2, -1.2, 13)], shade([190, 198, 196], lit));
+  quad([P3(-2.2, -1.2, 0.9), P3(-2.2, 1, 0.9), P3(-2.2, 1, 13), P3(-2.2, -1.2, 13)], shade([170, 180, 178], lit));
+  quad([P3(2.2, -1.2, 0.9), P3(2.2, 1, 0.9), P3(2.2, 1, 13), P3(2.2, -1.2, 13)], shade([165, 175, 173], lit));
+  quad([P3(-2.2, -1.2, 13), P3(2.2, -1.2, 13), P3(2.2, 1, 13), P3(-2.2, 1, 13)], shade([120, 130, 128], lit));
+  g.strokeStyle = `rgba(0,0,0,${0.12 * lit + 0.05})`; g.lineWidth = 1.5;
+  for (let x = -2.2; x <= 2.2; x += 0.55) { const [a, b] = [P3(x, 1, 0.9), P3(x, 1, 13)]; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); }
+  for (let z = 1; z <= 13; z += 0.9) { const [a, b] = [P3(-2.2, 1, z), P3(2.2, 1, z)]; g.beginPath(); g.moveTo(...a); g.lineTo(...b); g.stroke(); }
+  // monitor wall glow at the far end
+  const [mx, my] = P3(0, -0.2, 13); glow(mx, my, 90, "rgba(120,255,190,1)", 0.5);
+  // beds, far to near
+  for (let z = 11; z >= 2; z -= 1.8) for (const X of [-1.45, 1.45]) {
+    quad([P3(X - 0.45, 0.55, z + 1.4), P3(X + 0.45, 0.55, z + 1.4), P3(X + 0.45, 1, z + 1.4), P3(X - 0.45, 1, z + 1.4)], shade([90, 96, 98], lit));
+    quad([P3(X - 0.45, 0.55, z), P3(X + 0.45, 0.55, z), P3(X + 0.45, 0.55, z + 1.4), P3(X - 0.45, 0.55, z + 1.4)], shade([225, 228, 226], lit));
+    quad([P3(X - 0.45, 0.55, z), P3(X + 0.45, 0.55, z), P3(X + 0.45, 1, z), P3(X - 0.45, 1, z)], shade([110, 116, 118], lit));
+    for (const dz of [0.35, 1.0]) quad([P3(X - 0.47, 0.54, z + dz), P3(X + 0.47, 0.54, z + dz), P3(X + 0.47, 0.54, z + dz + 0.1), P3(X - 0.47, 0.54, z + dz + 0.1)], shade([60, 50, 40], lit));
+  }
+  // tubes
+  for (let i = 0; i < 6; i++) {
+    const z = 1.6 + i * 2;
+    quad([P3(-0.5, -1.18, z), P3(0.5, -1.18, z), P3(0.5, -1.18, z + 0.25), P3(-0.5, -1.18, z + 0.25)], on[i] ? "#f4fbf8" : "#4a4e4e");
+    if (on[i]) { const [x, y] = P3(0, -1.18, z); glow(x, y, 260 / z * 2, "rgba(230,250,245,1)", 0.35); }
+  }
+}
+
+const ecg = p => Math.exp(-(((p - 0.1) / 0.014) ** 2)) - 0.35 * Math.exp(-(((p - 0.135) / 0.014) ** 2)) + 0.15 * Math.exp(-(((p - 0.36) / 0.05) ** 2));
+function trace(x, y, w, h, phaseFn, t, col) {
+  g.strokeStyle = col; g.lineWidth = 2.5; g.beginPath();
+  for (let i = 0; i <= 220; i++) {
+    const tt = t - (1 - i / 220) * 2.2, p = phaseFn ? ((phaseFn(tt) % 1) + 1) % 1 : 0;
+    const px = x + i / 220 * w, py = y + h * 0.62 - (phaseFn ? ecg(p) : 0) * h * 0.5;
+    i ? g.lineTo(px, py) : g.moveTo(px, py);
+  }
+  g.stroke();
+}
+
+// Split two-shot: Daniel (left / top in 9:16) and his double, barrel to barrel. j: hammer jolt.
+function mirrorTwoShot(t, j, o = {}) {
+  const hb = heartbeat(t);
+    g.fillStyle = "#0e1416"; g.fillRect(0, 0, W, H);
+    const v = opts.vert;   // 9:16 stacks the two faces instead of setting them side by side
+    const mine = { eye: 1.2, brow: 0.6, worry: 0.7, frown: 0.4, look: o.look || (v ? [0, 0.6] : [0.7, 0]), k: v ? 0.62 : 0.95, dx: v ? 0 : -300, dy: v ? -250 : -30 };
+    const theirs = { eye: 1, look: o.look2 || (v ? [0, -0.6] : [-0.7, 0]), smile: o.smile ?? 0.25, k: v ? 0.62 : 0.95, dx: v ? 0 : 300, dy: v ? 120 : -30, iris: "#5fe3c0", irisGlow: 0.35 + 0.35 * hb };
+    g.save(); g.beginPath(); v ? g.rect(0, 0, W, 358) : g.rect(0, 0, 638, H); g.clip(); face(mine); g.restore();
+    g.save(); g.beginPath(); v ? g.rect(0, 362, W, H) : g.rect(642, 0, 638, H); g.clip(); face(theirs); g.restore();
+    fill("#0e2a2a", 0.35, "multiply");
+    g.fillStyle = "#050707"; v ? g.fillRect(0, 357, W, 6) : g.fillRect(637, 0, 6, H);
+    const gs = v ? 1.0 : 1.55, gy = v ? 360 : 630, gx = v ? 165 : 270;
+    revolver(640 - gx - j, gy, gs, { rot: -0.04 });
+    g.save(); g.translate(640 + gx + j, gy); g.scale(-1, 1); revolver(0, 0, gs, { rot: -0.04 }); g.restore();
+    glow(640, gy - 10, 120, TEAL, 0.15 + 0.25 * hb);
+}
+
+// ECU: an eye opening in pre-dawn light, one blink (Part 1 SH01; reused for Subject 08)
+function eyeOpen(lt, o = {}) {
+    g.fillStyle = "#3b3740"; g.fillRect(0, 0, W, H);
+    let open = ease(seg(lt, 0.5, 1.7));
+    if (lt > 2.05 && lt < 2.3) open *= 0.1;
+    g.save(); g.translate(640, 370);
+    g.fillStyle = "#4a3e3c"; ellipse(0, -10, 520, 230);
+    g.save(); g.beginPath(); g.ellipse(0, 0, 440, Math.max(1, 175 * open), 0, 0, Math.PI * 2); g.clip();
+    g.fillStyle = "#e6ded2"; g.fillRect(-460, -200, 920, 400);
+    g.strokeStyle = "rgba(170,60,60,.35)"; g.lineWidth = 2;
+    for (let i = 0; i < 8; i++) { g.beginPath(); g.moveTo(-420 + (i % 2) * 840, -40 + i * 12); g.quadraticCurveTo(-300 + (i % 2) * 600, i * 8, -230 + (i % 2) * 460, 10); g.stroke(); }
+    const gr = g.createRadialGradient(0, 0, 20, 0, 0, 150); gr.addColorStop(0, o.iris?.[0] || "#8a5a32"); gr.addColorStop(1, o.iris?.[1] || "#3c2412");
+    g.fillStyle = gr; circle(0, 0, 150);
+    g.fillStyle = "#0a0605"; circle(0, 0, lerp(78, 54, seg(lt, 1.2, 2.8)));
+    g.fillStyle = "rgba(255,255,255,.75)"; g.fillRect(40, -80, 34, 44);
+    g.restore();
+    g.strokeStyle = "#2a201e"; g.lineWidth = 10;
+    g.beginPath(); g.ellipse(0, 0, 446, Math.max(1, 180 * open), 0, Math.PI * 1.02, Math.PI * 1.98); g.stroke();
+    g.lineWidth = 6; g.beginPath(); g.ellipse(0, -40, 470, 200, 0, Math.PI * 1.1, Math.PI * 1.9); g.stroke();
+    g.restore();
+    fill(o.grade || "#3f5a8e", o.gradeA ?? 0.42, "multiply");
+    fill("#000", 1 - seg(lt, 0, 0.9));
+}
+
 // End card shared by Parts 2+: PATIENT 07 — TO BE CONTINUED
-function titleShot(a, b) {
+function titleShot(a, b, label = "PATIENT 07") {
   return { a, b, name: "Title", desc: "PATIENT 07 — TO BE CONTINUED", vover(lt, t) {
     const a = ease(seg(lt, 0.3, 1.1));
     g.save(); g.globalAlpha = a; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "#e8e2d0"; g.font = "700 40px \"Courier New\", ui-monospace, monospace";
-    g.letterSpacing = "7px"; g.fillText("PATIENT 07", VW / 2 + 3, 340);
+    g.letterSpacing = "7px"; g.fillText(label, VW / 2 + 3, 340);
     g.font = "400 13px \"Courier New\", ui-monospace, monospace"; g.letterSpacing = "5px"; g.fillStyle = "#8c93a0";
     g.fillText("TO BE CONTINUED", VW / 2 + 2, 384);
     g.restore();
@@ -314,7 +456,7 @@ function titleShot(a, b) {
     const a = ease(seg(lt, 0.3, 1.1));
     g.save(); g.globalAlpha = a; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "#e8e2d0"; g.font = "700 64px \"Courier New\", ui-monospace, monospace";
-    g.letterSpacing = "14px"; g.fillText("PATIENT 07", 647, 340);
+    g.letterSpacing = "14px"; g.fillText(label, 647, 340);
     g.font = "400 20px \"Courier New\", ui-monospace, monospace"; g.letterSpacing = "8px"; g.fillStyle = "#8c93a0";
     g.fillText("TO BE CONTINUED", 644, 410);
     g.restore();
