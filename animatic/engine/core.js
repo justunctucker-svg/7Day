@@ -169,7 +169,10 @@ function person(x, y, s, o = {}) {
   if (o.reach != null) { hand = [lerp(30, 62, o.reach), lerp(-104, -116, o.reach)]; elbow = [24, -122]; }
   limb([sh[0], sh[1] + 4, elbow[0], elbow[1], hand[0], hand[1]], 11, coat);
   g.fillStyle = skin; circle(hand[0], hand[1], 6.5);
-  if (o.mug != null) { g.fillStyle = "#e9e3d6"; rrect(hand[0] + 2, hand[1] - 14, 15, 18, 3); }
+  if (o.walkie) {
+    g.fillStyle = "#1f2226"; rrect(hand[0] - 1, hand[1] - 30, 13, 32, 3); g.fillRect(hand[0] + 8, hand[1] - 40, 3, 11);
+    g.fillStyle = `rgba(160,255,225,${0.3 + 0.7 * (o.led ?? 0)})`; circle(hand[0] + 4, hand[1] - 25, 2);
+  } else if (o.mug != null) { g.fillStyle = "#e9e3d6"; rrect(hand[0] + 2, hand[1] - 14, 15, 18, 3); }
   g.restore();
 }
 
@@ -761,6 +764,19 @@ function tone(when, { f = 440, f2 = null, type = "sine", dur = 0.2, v = 0.2, atk
   if (f2) o.frequency.exponentialRampToValueAtTime(f2, when + dur);
   chain(o, gn, bus); gn.gain.setValueAtTime(0.0001, when); gn.gain.exponentialRampToValueAtTime(v, when + atk);
   gn.gain.exponentialRampToValueAtTime(0.0001, when + dur); o.start(when); o.stop(when + dur + 0.05);
+}
+
+function breathing(period, peak, f) {
+  return (w, off, dur) => {
+    const gn = gain(); chain(noiseSrc(w, dur), filt("bandpass", f, 0.8), gn, bus);
+    gn.gain.setValueAtTime(0, w);
+    const first = Math.ceil(off / period) * period - off;
+    for (let k = first - period; k < dur; k += period) {
+      const s = w + Math.max(0, k);
+      gn.gain.linearRampToValueAtTime(peak, s + period * 0.35); gn.gain.linearRampToValueAtTime(0.0, s + period * 0.5);
+      gn.gain.linearRampToValueAtTime(peak * 0.7, s + period * 0.8); gn.gain.linearRampToValueAtTime(0.0, s + period);
+    }
+  };
 }
 
 // Each cue: [start, end, play(when, offsetIntoCue, remaining)]

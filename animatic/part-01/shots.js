@@ -270,18 +270,6 @@ const MARK_NOTE = "Lock this arm framing in layout and reuse it for SH18 and SH2
 
 // clock + breathing (cold open)
 for (let s = 0.2; s < 5; s += 1) at(s, w => hit(w, { f: 3500, q: 4, dur: 0.035, v: 0.25 }));
-function breathing(period, peak, f) {
-  return (w, off, dur) => {
-    const gn = gain(); chain(noiseSrc(w, dur), filt("bandpass", f, 0.8), gn, bus);
-    gn.gain.setValueAtTime(0, w);
-    const first = Math.ceil(off / period) * period - off;
-    for (let k = first - period; k < dur; k += period) {
-      const s = w + Math.max(0, k);
-      gn.gain.linearRampToValueAtTime(peak, s + period * 0.35); gn.gain.linearRampToValueAtTime(0.0, s + period * 0.5);
-      gn.gain.linearRampToValueAtTime(peak * 0.7, s + period * 0.8); gn.gain.linearRampToValueAtTime(0.0, s + period);
-    }
-  };
-}
 bed(0, 5, breathing(2.6, 0.05, 700));
 // city + TV murmur
 bed(5, 18.2, (w, off, dur) => { const gn = gain(); chain(noiseSrc(w, dur), filt("lowpass", 380), gn, bus); bedEnv(gn, w, dur, 0.12, off < 0.1 ? 0.6 : 0.05, 0.5); });

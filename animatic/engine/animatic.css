@@ -43,3 +43,4 @@ ol.shots .tc { font: 12px ui-monospace, Menlo, Consolas, monospace; color: var(-
 ol.shots .nm { font-weight: 600; margin: 2px 0; }
 ol.shots .ds { color: var(--muted); font-size: 12.5px; }
 .note { color: var(--muted); font-size: 12.5px; margin-top: 18px; }
+header a { color: var(--accent); }

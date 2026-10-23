@@ -3,7 +3,7 @@
 **Format:** 2D animated short **Runtime:** ~60 seconds
 **Dialogue:** Ward only, over a walkie-talkie (same radio treatment as Part 1, plus a squelch at the start and end of each transmission). Everything else is picture, SFX, music and day stamps.
 
-**Status:** DRAFT for approval. No animatic yet.
+Playable animatic: [`animatic/part-02.html`](../animatic/part-02.html) (open in any browser, press Space).
 
 ---
 
@@ -22,6 +22,36 @@
 | 00:56–01:00 | **The hook** | The eye blinks once, perfectly in time with the pulse in his arm. Hard cut to black. | One heartbeat thump. | `PATIENT 07 — TO BE CONTINUED` |
 
 ---
+
+## Shot list (as cut in the animatic)
+
+| # | In | Out | Shot | Notes |
+|---|---|---|---|---|
+| 01 | 00:00.0 | 00:01.6 | ECU Daniel, frozen | Part 1's freeze frame thaws from grey; eyes dart to the door |
+| 02 | 00:01.6 | 00:04.0 | Floor level at the door | Feet in the light strip; the walkie skids in under the door |
+| 03 | 00:04.0 | 00:06.0 | MS front wall | Daniel creeps to the door |
+| 04 | 00:06.0 | 00:10.0 | Peephole POV (fisheye) | Empty porch, dragging footprints, a shape slips into the corn |
+| 05 | 00:10.0 | 00:10.8 | CU floorboards | His hand lifts the walkie |
+| 06 | 00:10.8 | 00:14.0 | CU walkie in hand | Ward 1 (00:10.9): "Good. You didn't open the door." |
+| 07 | 00:14.0 | 00:15.6 | CU Daniel | Looks down at his arm |
+| 08 | 00:15.6 | 00:18.4 | CU forearm | Part 1's arm framing; the mark pulses. Ward 2 (00:16.0): "That mark is how they find you." |
+| 09 | 00:18.4 | 00:25.0 | EWS cornfield from the porch | Crickets stop; teal eyes open across the field, then turn toward the house |
+| 10 | 00:25.0 | 00:26.0 | CU Daniel | Resolve |
+| 11 | 00:26.0 | 00:27.8 | MS front wall | `DAY 10`; dresser dragged across the door |
+| 12 | 00:27.8 | 00:29.6 | MS window | Two boards slam on; three hammer blows |
+| 13 | 00:29.6 | 00:31.2 | CU oil lantern | Wick turned down; dark. A faint teal glow from his arm remains |
+| 14 | 00:31.2 | 00:34.0 | CU forearm | Same framing; cloth bound over the mark, glow bleeds through the weave |
+| 15 | 00:34.0 | 00:37.0 | MS boarded window | Silhouettes pass; nails on glass; a hand slaps flat on the pane |
+| 16 | 00:37.0 | 00:39.0 | CU doorknob | It turns; the dresser shudders |
+| 17 | 00:39.0 | 00:42.8 | MS Daniel, back to the wall | Ward 3 (00:39.3): "Check the closet. I left you something." |
+| 18 | 00:42.8 | 00:44.6 | MS closet door | He slips inside and pulls it to; black |
+| 19 | 00:44.6 | 00:47.6 | CU folder by flashlight | PROJECT ECHO cover opens: SUBJECT 07, HAYES, D. |
+| 20 | 00:47.6 | 00:50.0 | CU six subject files | TURNED stamps slam on one by one |
+| 21 | 00:50.0 | 00:52.0 | CU Subject 06's page | LAST KNOWN LOCATION: THIS PROPERTY; the flashlight trembles |
+| 22 | 00:52.0 | 00:53.6 | CU Daniel, under-lit | Scratching beneath him; he looks down |
+| 23 | 00:53.6 | 00:56.2 | Top-down floorboards | Flashlight tilts to the gap; a teal eye opens |
+| 24 | 00:56.2 | 00:57.6 | ECU the eye through the gap | Blinks on the beat at 00:57.0; hard cut |
+| 25 | 00:57.6 | 01:00.0 | Black, title | `PATIENT 07 — TO BE CONTINUED` |
 
 ## Why it works as Part 2
 
