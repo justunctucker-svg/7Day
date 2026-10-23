@@ -9,7 +9,7 @@
 | [`animatic/renders/echo07-part01-animatic-v2.mp4`](animatic/renders/echo07-part01-animatic-v2.mp4) | 1280×720 / 24 fps render with voices and scratch SFX mixed in (subtitles burned) |
 | [`animatic/renders/echo07-part01-animatic-v2-9x16.mp4`](animatic/renders/echo07-part01-animatic-v2-9x16.mp4) | 1080×1920 / 24 fps vertical cut for Shorts, Reels and TikTok, reframed per shot, with voices |
 | [`animatic/vo/vo.js`](animatic/vo/vo.js) | Scratch voice-over clips used by the animatic (generated) |
-| [`tools/build_vo.py`](tools/build_vo.py) | Rebuilds the voice-over: RHVoice synthesis plus radio, TV and whisper effects |
+| [`tools/build_vo.py`](tools/build_vo.py) | Rebuilds the voice-over: RHVoice synthesis plus the radio effect |
 
 ## Running the animatic
 
@@ -23,13 +23,7 @@ Open `animatic/index.html` in a browser. It is a single self-contained file with
 
 ## Voices
 
-The scratch voice-over is synthetic (RHVoice) and stands in for real recordings:
-
-| Character | Voice | Treatment |
-|---|---|---|
-| Daniel | `bdl` (US male) | Dry and close; the DAY 5 line is a whisper (pitch removed, breathy) |
-| News anchor | `slt` (US female) | Small TV speaker across the room |
-| Ward | `alan`, pitched down | AM-radio band, overdriven speaker, carrier flutter, static and crackle |
+Only Ward speaks. His two radio lines are synthetic scratch VO (RHVoice `alan`, pitched down) through an AM-radio chain: band-limited, overdriven speaker, carrier flutter, static and crackle. The script also has `dry`, `tv` and `whisper` chains ready if other characters get lines later.
 
 To change a line or its timing, edit `LINES` in `tools/build_vo.py` and the matching entry in `VO` in `animatic/index.html`, then run:
 

@@ -751,7 +751,7 @@ const SHOTS = [
     apartment(t, { brew: true, px: lerp(800, 860, ease(seg(lt, 2.4, 3.2))), face: lt < 2.5 ? -1 : 1, reach, mug });
     stamp("DAY ONE", lt - 0.5, { small: true, out: 6.2 });
   } },
-  { a: 12, b: 15, name: "Breaking news", vx: 640, desc: "CU TV. Zombie outbreak bulletin; anchor VO.", draw(lt, t) {
+  { a: 12, b: 15, name: "Breaking news", vx: 640, desc: "CU TV. Zombie outbreak bulletin.", draw(lt, t) {
     g.fillStyle = "#0e0d0d"; g.fillRect(0, 0, W, H);
     const flick = lt < 0.9 ? (Math.floor(lt * 18) % 3 === 0 ? 1 : 0.6) : 0.08;
     if (opts.vert) { g.fillStyle = "#050505"; rrect(428, 176, 424, 249, 8); tvScreen(440, 188, 400, 225, t, { breaking: lt > 0.55, static: flick }); }
@@ -812,7 +812,7 @@ const SHOTS = [
     g.restore();
     stamp("DAY 3", lt - 0.1);
   } },
-  { a: 24.6, b: 26.2, name: "DAY 5: two cans", vx: 610, desc: "CU cabinet: two cans. \"Darn it... I'm running out.\"", draw(lt) {
+  { a: 24.6, b: 26.2, name: "DAY 5: two cans", vx: 610, desc: "CU cabinet opens on two cans.", draw(lt) {
     g.fillStyle = "#060709"; g.fillRect(0, 0, W, H);
     g.fillStyle = "#2a1f17"; g.fillRect(300, 110, 680, 500);
     g.fillStyle = "#1a130e"; g.fillRect(320, 130, 640, 460);
@@ -971,9 +971,6 @@ function stairX(lt) { return lt < 2.9 ? lerp(1180, 420, seg(lt, 1.25, 2.9)) : le
 // Subtitles / VO
 // Clips come from vo/vo.js (tools/build_vo.py); without it the lines still show as subtitles.
 const VO = [
-  { id: "anchor", a: 12.45, who: "NEWS ANCHOR (TV)", text: "Breaking news. A zombie outbreak in downtown Ashford. Stay indoors." },
-  { id: "daniel1", a: 15.95, who: "DANIEL (V.O., quiet)", text: "It'll pass. It always does." },
-  { id: "daniel2", a: 25.0, who: "DANIEL (whispering)", text: "Darn it... I'm running out." },
   { id: "ward1", a: 45.4, who: "WARD (V.O., radio)", text: "Daniel Hayes... if you can hear this... don't leave the farmhouse.", radio: true },
   { id: "ward2", a: 52.0, who: "WARD (V.O., radio)", text: "You've been infected... since day one.", radio: true },
 ];

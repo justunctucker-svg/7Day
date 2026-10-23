@@ -24,9 +24,6 @@ SR = 48000
 
 # id, voice, rate %, chain, text
 LINES = [
-    ("anchor", "slt", 130, "tv", "Breaking news. A zombie outbreak in downtown Ashford. Stay indoors."),
-    ("daniel1", "bdl", 100, "dry", "It'll pass. It always does."),
-    ("daniel2", "bdl", 95, "whisper", "Darn it... I'm running out."),
     ("ward1", "alan", 88, "radio", "Daniel Hayes... if you can hear this... don't leave the farmhouse."),
     ("ward2", "alan", 85, "radio", "You've been infected... since day one."),
 ]
