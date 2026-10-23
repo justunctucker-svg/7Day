@@ -3,7 +3,7 @@
 **Format:** 2D animated short **Runtime:** ~60 seconds
 **Dialogue:** Ward only. Three lines over the walkie (radio treatment plus squelch), then one line **in the room, unfiltered**, for the first time in the series.
 
-**Status:** DRAFT for approval. No animatic yet.
+Playable animatic: [`animatic/part-04.html`](../animatic/part-04.html) (open in any browser, press Space).
 
 ---
 
@@ -35,6 +35,40 @@
 | 00:58–01:00 | **The cliffhanger** | Daniel raises his revolver, one round. The other Daniel raises the identical one. A perfect mirror, barrel to barrel. Both hammers click back. **Hard cut** on the click. | Two hammer clicks, perfectly together. Silence. | `PATIENT 07 — TO BE CONTINUED` |
 
 ---
+
+## Shot list (as cut in the animatic)
+
+| # | In | Out | Shot | Notes |
+|---|---|---|---|---|
+| 01 | 00:00.0 | 00:01.6 | Black, the walkie | One heartbeat; the LED snaps teal → red at 00:01.4 |
+| 02 | 00:01.6 | 00:04.2 | CU walkie, red | Ward 1 (00:01.8): "They heard the shot." The heartbeat starts climbing |
+| 03 | 00:04.2 | 00:06.4 | EWS the field | `1:30`. Every eye opens at once; the field surges at the house. Ward 2 (00:04.9): "Ninety seconds. Go down... under the floor." |
+| 04 | 00:06.4 | 00:08.0 | MS boarded window | Shapes crowd the glass; the frame rattles |
+| 05 | 00:08.0 | 00:09.4 | Top-down, the hole | He drops the torch in; it lands on dirt |
+| 06 | 00:09.4 | 00:11.2 | Cutaway | He lowers himself through the floor into the tunnel |
+| 07 | 00:11.2 | 00:12.6 | MS front wall | Three bangs; the door cracks; the dresser shifts |
+| 08 | 00:12.6 | 00:16.0 | Side-on tracking, tunnel | The crawl by torchlight |
+| 09 | 00:16.0 | 00:17.6 | CU dirt wall | Tally marks and 07 carved over and over |
+| 10 | 00:17.6 | 00:20.4 | POV ahead | `0:52`. The torch stutters |
+| 11 | 00:20.4 | 00:22.0 | POV behind | A thump, dust, two teal eyes far back |
+| 12 | 00:22.0 | 00:26.0 | Side-on tracking | Faster; a grey hand creeps in behind |
+| 13 | 00:26.0 | 00:27.2 | CU ankle | The grab |
+| 14 | 00:27.2 | 00:28.0 | POV behind, gun up | He rolls and aims back down the tunnel |
+| 15 | 00:28.0 | 00:28.35 | FLASH | The muzzle flash: the tunnel packed with faces |
+| 16 | 00:28.35 | 00:29.6 | Black, then cylinder | One spent, one live: one round left |
+| 17 | 00:29.6 | 00:33.0 | Side-on tracking | Desperate crawl; shrieks behind. Ward 3 (00:29.8): "Don't stop. Whatever you hear." |
+| 18 | 00:33.0 | 00:35.2 | The hatch | `0:17`. PROJECT ECHO — 07; scanner plate on the heartbeat |
+| 19 | 00:35.2 | 00:36.4 | Dark | The torch dies (00:35.9): only the plate and his mark glow |
+| 20 | 00:36.4 | 00:38.0 | CU forearm on the plate | Part 1's arm framing; the plate turns white |
+| 21 | 00:38.0 | 00:40.0 | The hatch | CLANG ×3; it swings open on white light |
+| 22 | 00:40.0 | 00:44.0 | WS bunker | Fluorescents stutter on; empty beds with restraints; Daniel in silhouette |
+| 23 | 00:44.0 | 00:48.0 | Monitor wall | 01–06 FLAT; 07 racing (live BPM); 08–12 beating |
+| 24 | 00:48.0 | 00:51.6 | WS the console | `0:03`. Someone at the radio, back to us; TX · CH 07 · LIVE; a revolver on the desk |
+| 25 | 00:51.6 | 00:54.0 | Push in | His gun comes up; two heartbeats in sync |
+| 26 | 00:54.0 | 00:54.9 | MS the chair | It turns |
+| 27 | 00:54.9 | 00:57.6 | CU the double | Daniel's face, teal eyes. Ward 4, in the room (00:55.1): "Hello... Seven." The heartbeats hush under it |
+| 28 | 00:57.6 | 00:59.0 | Split two-shot | Daniel and his double, barrel to barrel (stacked in 9:16). Both hammers click at 00:58.6. Hard cut |
+| 29 | 00:59.0 | 01:00.0 | Black, title | `PATIENT 07 — TO BE CONTINUED` |
 
 ## Why the cliffhanger lands
 

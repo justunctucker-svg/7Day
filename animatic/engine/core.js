@@ -196,10 +196,11 @@ function face(o) {
     g.save();
     g.beginPath(); g.ellipse(ex, ey, 42, Math.max(1, 22 * open), 0, 0, Math.PI * 2); g.clip();
     g.fillStyle = "#efe9e0"; g.fillRect(ex - 50, ey - 50, 100, 100);
-    g.fillStyle = "#5a3a22"; circle(ex + lx * 14, ey + ly * 9, 17);
+    g.fillStyle = o.iris || "#5a3a22"; circle(ex + lx * 14, ey + ly * 9, 17);
     g.fillStyle = "#120c09"; circle(ex + lx * 14, ey + ly * 9, 7 * (o.pupil || 1));
     g.fillStyle = "#fff"; circle(ex + lx * 14 + 6, ey + ly * 9 - 6, 3.5);
     g.restore();
+    if (o.irisGlow) glow(ex + lx * 14, ey + ly * 9, 70, TEAL, o.irisGlow);
     g.strokeStyle = "#3a2618"; g.lineWidth = 5; g.lineCap = "round";
     g.beginPath(); g.ellipse(ex, ey, 44, Math.max(1, 23 * open), 0, Math.PI * 1.08, Math.PI * 1.92); g.stroke();
     const by = ey - 52 - (o.brow || 0) * 18, inner = (o.worry || 0) * 16;

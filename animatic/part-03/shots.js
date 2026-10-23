@@ -4,55 +4,6 @@
 // ---------------------------------------------------------------------------
 // Part 3 props
 // ---------------------------------------------------------------------------
-// Revolver in side profile, barrel pointing +x, origin at the cylinder. open swings the cylinder out.
-function revolver(x, y, s, o = {}) {
-  const open = o.open || 0;
-  g.save(); g.translate(x, y); g.scale(s, s); if (o.rot) g.rotate(o.rot);
-  g.fillStyle = "#5a3a22";
-  g.beginPath(); g.moveTo(-40, 8); g.lineTo(-18, 8); g.lineTo(-36, 92); g.quadraticCurveTo(-50, 104, -70, 96); g.lineTo(-62, 20); g.closePath(); g.fill();
-  g.strokeStyle = "rgba(0,0,0,.3)"; g.lineWidth = 1.5;
-  for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(-56 + i * 4, 32 + i * 14); g.lineTo(-32 + i * 2, 30 + i * 14); g.stroke(); }
-  g.fillStyle = "#3a3e44";
-  g.beginPath(); g.moveTo(-44, -26); g.lineTo(34, -26); g.lineTo(34, 18); g.lineTo(-18, 18); g.lineTo(-40, 14); g.closePath(); g.fill();
-  g.fillStyle = "#43484f"; g.fillRect(30, -24, 120, 18); g.fillRect(30, -6, 80, 8);
-  g.fillStyle = "#2a2d32"; g.fillRect(140, -30, 8, 6);
-  g.beginPath(); g.moveTo(-44, -24); g.lineTo(-58, -40); g.lineTo(-50, -44); g.lineTo(-34, -26); g.fill();
-  g.strokeStyle = "#3a3e44"; g.lineWidth = 5; g.beginPath(); g.arc(-8, 22, 16, 0, Math.PI); g.stroke();
-  g.strokeStyle = "#2a2d32"; g.lineWidth = 4; g.beginPath(); g.moveTo(-6, 18); g.quadraticCurveTo(-2, 28, -10, 32); g.stroke();
-  if (open > 0) { g.fillStyle = "#111316"; g.fillRect(-24, -24, 52, 38); }
-  g.save(); g.translate(-8 * open, 34 * open); g.rotate(-0.3 * open);
-  g.fillStyle = "#555b63"; rrect(-26, -28, 54, 44, 8);
-  g.fillStyle = "rgba(0,0,0,.35)"; for (const yy of [-18, -6, 6]) g.fillRect(-20, yy, 42, 4);
-  g.restore();
-  g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(30, -24, 120, 4);
-  g.restore();
-}
-
-const chamberAt = (i, r, rot = 0) => { const a = i * Math.PI / 3 - Math.PI / 2 + rot; return [Math.cos(a) * r * 0.6, Math.sin(a) * r * 0.6]; };
-
-// The cylinder seen end-on: six chambers, brass where a round is seated
-function cylinderFace(cx, cy, r, loaded, rot = 0) {
-  g.save(); g.translate(cx, cy);
-  g.fillStyle = "#2c3036"; circle(0, 0, r * 1.04);
-  g.fillStyle = "#4f555d"; circle(0, 0, r);
-  g.fillStyle = "rgba(255,255,255,.08)"; g.beginPath(); g.arc(0, 0, r * 0.95, Math.PI * 1.1, Math.PI * 1.6); g.lineTo(0, 0); g.fill();
-  g.fillStyle = "#3a3f46"; circle(0, 0, r * 0.2); g.fillStyle = "#16181c"; circle(0, 0, r * 0.08);
-  for (let i = 0; i < 6; i++) {
-    const [x, y] = chamberAt(i, r, rot);
-    if (loaded[i]) { g.fillStyle = "#b8903e"; circle(x, y, r * 0.2); g.fillStyle = "#e0c070"; circle(x - r * 0.03, y - r * 0.03, r * 0.15); g.fillStyle = "#8a6a2a"; circle(x, y, r * 0.06); }
-    else { g.fillStyle = "#0a0b0d"; circle(x, y, r * 0.2); }
-  }
-  g.restore();
-}
-
-// A round seen from its base (for loading) or from the side (rolling on the floor)
-function roundBase(x, y, r) { g.fillStyle = "#b8903e"; circle(x, y, r); g.fillStyle = "#e0c070"; circle(x - r * 0.15, y - r * 0.15, r * 0.75); g.fillStyle = "#8a6a2a"; circle(x, y, r * 0.3); }
-function roundSide(x, y, s, rot) {
-  g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
-  g.fillStyle = "#c9a04a"; g.fillRect(-16, -6, 26, 12); g.fillStyle = "#a8803a"; g.fillRect(-18, -7, 4, 14);
-  g.fillStyle = "#8a8a90"; g.beginPath(); g.moveTo(10, -6); g.quadraticCurveTo(22, 0, 10, 6); g.fill();
-  g.restore();
-}
 
 function ammoCarton(x, y, s, rot) {
   g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
@@ -67,82 +18,6 @@ function tagProp(x, y, s, rot) {
   g.strokeStyle = "#cfc2a0"; g.lineWidth = 2; g.beginPath(); g.moveTo(-70, 0); g.quadraticCurveTo(-110, -30, -150, -10); g.stroke();
   g.fillStyle = "#d8c49a"; g.beginPath(); g.moveTo(-60, -34); g.lineTo(60, -34); g.lineTo(60, 34); g.lineTo(-60, 34); g.lineTo(-76, 18); g.lineTo(-76, -18); g.closePath(); g.fill();
   g.fillStyle = "#bfa878"; circle(-58, 0, 8); g.fillStyle = "#2a2018"; circle(-58, 0, 4);
-  g.restore();
-}
-
-// Torch lying on the floor; returns where its head points so the beam can follow
-function torch(x, y, rot, s = 1) {
-  g.save(); g.translate(x, y); g.rotate(rot); g.scale(s, s);
-  g.fillStyle = "#2a2c30"; rrect(-70, -14, 110, 28, 6); g.fillStyle = "#3a3d42"; rrect(36, -20, 34, 40, 5);
-  g.fillStyle = "#fff4d8"; g.fillRect(68, -16, 4, 32);
-  g.restore();
-  return [x + Math.cos(rot) * 72 * s, y + Math.sin(rot) * 72 * s];
-}
-
-// Lit cone from a point along an angle, then darkness everywhere the cone and pool don't reach
-function beam(hx, hy, rot, len = 900, spread = 0.32) {
-  const cx = hx + Math.cos(rot) * len * 0.45, cy = hy + Math.sin(rot) * len * 0.45;
-  flashlight(cx, cy, len * 0.55);
-  g.save(); g.globalCompositeOperation = "lighter"; g.globalAlpha = 0.1;
-  const gr = g.createRadialGradient(hx, hy, 0, hx, hy, len);
-  gr.addColorStop(0, "#fff0d0"); gr.addColorStop(1, "rgba(255,240,208,0)");
-  g.fillStyle = gr; g.beginPath(); g.moveTo(hx, hy);
-  g.lineTo(hx + Math.cos(rot - spread) * len, hy + Math.sin(rot - spread) * len);
-  g.lineTo(hx + Math.cos(rot + spread) * len, hy + Math.sin(rot + spread) * len);
-  g.closePath(); g.fill(); g.restore();
-}
-
-function closetWall() {
-  g.fillStyle = "#120c08"; g.fillRect(0, 0, W, H);
-  for (let x = 0; x < W; x += 58) { g.fillStyle = (x / 58) % 2 ? "#22170f" : "#1d140d"; g.fillRect(x, 0, 56, 640); }
-  g.fillStyle = "#2a1c12"; g.fillRect(0, 120, W, 14); g.fillRect(0, 300, W, 14);
-  g.fillStyle = "#1a120c"; g.fillRect(0, 640, W, 80);
-}
-
-// Subject 06: gaunt, grey, teal veins, torn gown, the same mark on its chest. Baseline at y (waist/floor).
-function subject06(x, y, s, o = {}) {
-  const hb = o.hb ?? 0, va = o.veins ?? 1, tilt = o.tilt || 0, hand = o.hand || 0, reach = o.reach || 0;
-  const skin = "#767c75", gown = "#4e5862";
-  g.save(); g.translate(x, y); g.scale(s, s); g.lineCap = "round"; g.lineJoin = "round";
-  limb([-58, -270, -80, -180, lerp(-70, -40, reach), lerp(-96, -300, reach)], 16, skin);
-  g.fillStyle = gown; g.beginPath(); g.moveTo(-40, -292); g.lineTo(40, -292); g.quadraticCurveTo(66, -284, 64, -250); g.lineTo(78, 0);
-  for (let i = 0; i <= 10; i++) g.lineTo(78 - i * 15.6, i % 2 ? -18 : 0);
-  g.lineTo(-64, -250); g.quadraticCurveTo(-66, -284, -40, -292);
-  g.closePath(); g.fill();
-  g.fillStyle = "rgba(40,30,30,.35)"; ellipse(30, -120, 18, 30, 0.3); ellipse(-40, -60, 14, 22);
-  g.fillStyle = skin; g.beginPath(); g.moveTo(-28, -284); g.lineTo(28, -284); g.lineTo(0, -226); g.closePath(); g.fill();
-  g.fillRect(-12, -314, 24, 36);
-  g.save(); g.translate(0, -312); g.rotate(tilt);
-  g.fillStyle = skin; ellipse(0, -44, 34, 48);
-  g.fillStyle = "#2a2e2c"; ellipse(-13, -48, 10, 8); ellipse(13, -48, 10, 8);
-  g.fillStyle = `rgba(175,255,232,${(0.5 + 0.5 * hb) * va})`; circle(-13, -48, 3.2); circle(13, -48, 3.2);
-  glow(-13, -48, 16, TEAL, 0.4 * va); glow(13, -48, 16, TEAL, 0.4 * va);
-  g.strokeStyle = "#3a3e3a"; g.lineWidth = 2; g.beginPath(); g.moveTo(-10, -18); g.lineTo(10, -18); g.stroke();
-  g.strokeStyle = "rgba(0,0,0,.25)"; g.beginPath(); g.moveTo(-24, -36); g.quadraticCurveTo(-17, -26, -22, -12); g.moveTo(24, -36); g.quadraticCurveTo(17, -26, 22, -12); g.stroke();
-  g.restore();
-  const hx = lerp(lerp(72, 118, hand), 44, reach), hy = lerp(lerp(-100, -232, hand), -300, reach);
-  limb([58, -270, lerp(86, 130, hand), lerp(-180, -200, hand), hx, hy], 16, skin);
-  g.fillStyle = skin; ellipse(hx + 6 * hand, hy - 4, 16, 10 + 4 * hand);
-  if (hand > 0.3 || reach > 0.3) for (let i = 0; i < 4; i++) ellipse(hx - 5 + i * 7 + 6, hy - 16 - (i % 2) * 3, 3.5, 9);
-  g.fillStyle = "#e8e6de"; g.save(); g.translate(lerp(hx, 118, 0.25), hy + 16); g.rotate(-0.6 * hand); g.fillRect(-11, -4, 22, 8); g.restore();
-  g.save(); g.globalCompositeOperation = "lighter"; g.strokeStyle = `rgba(95,227,192,${va * (0.25 + 0.55 * hb)})`; g.lineWidth = 2;
-  const vein = p => { g.beginPath(); g.moveTo(p[0], p[1]); for (let i = 2; i < p.length; i += 2) g.lineTo(p[i], p[i + 1]); g.stroke(); };
-  vein([0, -250, -14, -270, -10, -300, -16, -330]); vein([0, -250, 18, -268, 40, -276, 60, -268]); vein([0, -250, -20, -262, -46, -272, -60, -262]);
-  vein([0, -250, 6, -282, 2, -314]); vein([58, -268, 76, -220, hx - 6, hy + 22]); vein([-58, -268, -76, -210, -72, -150]);
-  g.restore();
-  g.fillStyle = `rgba(215,255,242,${(0.4 + 0.6 * hb) * Math.max(va, 0.15)})`; circle(0, -250, 3.6);
-  glow(0, -250, 30 + 30 * hb, TEAL, va * (0.35 + 0.5 * hb));
-  g.restore();
-}
-
-// Daniel's hands round the revolver, from behind his shoulder
-function gunHands(x, y, s, rot, t, tremble) {
-  const j = tremble * Math.sin(t * 41) * 3;
-  g.save(); g.translate(x + j, y + j * 0.6);
-  g.strokeStyle = "#2c3446"; g.lineCap = "round"; g.lineWidth = 70 * s / 2.4;
-  g.beginPath(); g.moveTo(-260, 520); g.lineTo(-40, 60); g.moveTo(-80, 560); g.lineTo(-10, 80); g.stroke();
-  revolver(0, 0, s, { rot });
-  g.fillStyle = "#b7896a"; ellipse(-60 * s / 2.4, 70 * s / 2.4, 46 * s / 2.4, 40 * s / 2.4, 0.4); ellipse(-20 * s / 2.4, 90 * s / 2.4, 40 * s / 2.4, 34 * s / 2.4, 0.2);
   g.restore();
 }
 

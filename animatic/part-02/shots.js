@@ -5,32 +5,6 @@
 // Part 2 set pieces
 // ---------------------------------------------------------------------------
 
-function dresser(x, y) {
-  g.fillStyle = "#2a2228"; g.fillRect(x + 8, y - 12, 12, 12); g.fillRect(x + 180, y - 12, 12, 12);
-  g.fillStyle = "#3a2c30"; g.fillRect(x, y - 196, 200, 186);
-  g.fillStyle = "#2c2024"; g.fillRect(x - 6, y - 204, 212, 12);
-  g.strokeStyle = "#221a1e"; g.lineWidth = 5;
-  for (let i = 0; i < 3; i++) g.strokeRect(x + 12, y - 184 + i * 58, 176, 48);
-  g.fillStyle = "#7a6a58"; for (let i = 0; i < 3; i++) { circle(x + 60, y - 160 + i * 58, 5); circle(x + 140, y - 160 + i * 58, 5); }
-}
-
-// Living-room wall with the front door (peephole, knob, moonlight strip under it)
-function frontWall(t, o = {}) {
-  nightWall();
-  g.fillStyle = "#0b0f1c"; g.fillRect(866, 150, 208, 412);
-  g.fillStyle = "#2a2230"; g.fillRect(876, 160, 188, 402);
-  g.strokeStyle = "#1c1622"; g.lineWidth = 8; g.strokeRect(898, 190, 144, 140); g.strokeRect(898, 350, 144, 180);
-  g.fillStyle = "#6a6258"; circle(1046, 372, 9);
-  g.fillStyle = "#000"; circle(970, 250, 4);
-  g.fillStyle = "rgba(170,190,240,.35)"; g.fillRect(876, 557, 188, 5);
-  // coat on a hook
-  g.fillStyle = "#3a3026"; g.fillRect(740, 210, 8, 12);
-  g.fillStyle = "#2a2c3a"; g.beginPath(); g.moveTo(744, 218); g.lineTo(706, 250); g.lineTo(716, 400); g.lineTo(774, 400); g.lineTo(784, 250); g.closePath(); g.fill();
-  if (o.dresser != null) dresser(o.dresser, 562);
-  if (o.daniel) person(o.daniel[0], 640, 1.55, { pose: "walk", phase: o.daniel[1], facing: 1, coat: "#3b475a" });
-  fill("#0b1530", 0.25, "multiply");
-}
-
 // What the peephole sees: the porch, the yard, dragging footprints into the corn
 function porchScene(lt) {
   g.fillStyle = vgrad(0, 380, ["#05070f", "#16203a"]); g.fillRect(-200, -200, W + 400, 600);
@@ -74,17 +48,6 @@ const CORN_EYES = (() => {
   return out;
 })();
 
-function cornRow(y, h, col, t, seed) {
-  const r = rng(seed);
-  g.strokeStyle = col; g.lineCap = "round";
-  for (let x = -40; x < W + 40; x += 9 + r() * 8) {
-    const sway = Math.sin(t * 1.3 + x * 0.02) * 4, top = y - h * (0.8 + r() * 0.3);
-    g.lineWidth = 3; g.beginPath(); g.moveTo(x, y); g.quadraticCurveTo(x + sway * 0.5, (y + top) / 2, x + sway, top); g.stroke();
-    g.lineWidth = 2;
-    for (let k = 0; k < 3; k++) { const ly = lerp(y, top, 0.3 + k * 0.22), d = k % 2 ? 1 : -1; g.beginPath(); g.moveTo(x + sway * 0.4, ly); g.quadraticCurveTo(x + d * 14, ly - 6, x + d * 22 + sway, ly + 4); g.stroke(); }
-  }
-}
-
 function fieldEye(e, t) {
   if (t < e.open) return;
   const open = ease(seg(t, e.open, e.open + 0.25)), turned = ease(seg(t, e.turn, e.turn + 0.15));
@@ -117,43 +80,10 @@ function cornfield(lt, t) {
   fill("#0b1530", 0.2, "multiply");
 }
 
-function boardedWindow(lt, t, o) {
-  nightWall();
-  const X = 440, Y = 140, WW = 400, WH = 330;
-  g.save(); g.beginPath(); g.rect(X, Y, WW, WH); g.clip();
-  g.fillStyle = vgrad(Y, Y + WH, ["#1c2a4f", "#2a3a64"]); g.fillRect(X, Y, WW, WH);
-  glow(X + 300, Y + 80, 220, "rgba(150,170,230,1)", 0.25);
-  for (const [fx, fs] of (o.figures || [])) person(fx, Y + WH + 40, fs, { pose: "hunch", facing: -1, coat: "#05070d", skin: "#05070d", hair: "#05070d", eyeGlow: true });
-  if (o.hand > 0) {
-    const hx = 560, hy = 300 + o.hand * 26;
-    g.fillStyle = "#06080e"; ellipse(hx, hy, 38, 44);
-    [[-26, -58, -0.25], [-9, -70, -0.08], [9, -70, 0.08], [26, -60, 0.22]].forEach(([dx, dy, rot]) => { g.save(); g.translate(hx + dx, hy + dy); g.rotate(rot); rrect(-8, -30, 16, 52, 8); g.restore(); });
-    g.save(); g.translate(hx + 44, hy + 2); g.rotate(0.7); rrect(-8, -26, 16, 40, 8); g.restore();
-    g.strokeStyle = "rgba(190,205,240,.18)"; g.lineWidth = 3; g.beginPath(); g.ellipse(hx, hy, 40, 46, 0, 0, Math.PI * 2); g.stroke();
-  }
-  g.restore();
-  g.strokeStyle = "#2a3350"; g.lineWidth = 12; g.strokeRect(X, Y, WW, WH);
-  g.lineWidth = 7; g.beginPath(); g.moveTo(X + WW / 2, Y); g.lineTo(X + WW / 2, Y + WH); g.moveTo(X, Y + WH / 2); g.lineTo(X + WW, Y + WH / 2); g.stroke();
-  curtain(X - 46, Y - 22, 96, WH + 54, false, "#262b40", "rgba(110,40,50,.45)");
-  curtain(X + WW - 50, Y - 22, 96, WH + 54, true, "#262b40", "rgba(110,40,50,.45)");
-  // boards: [cx, cy, rotation, drop-in progress]
-  for (const [cx, cy, rot, p] of (o.boards || [])) {
-    if (p <= 0) continue;
-    g.save(); g.translate(cx, cy - (1 - ease(p)) * 160); g.rotate(rot + (1 - ease(p)) * 0.4);
-    g.fillStyle = "#4a3a2c"; g.fillRect(-250, -24, 500, 48);
-    g.strokeStyle = "rgba(0,0,0,.3)"; g.lineWidth = 2; g.beginPath(); g.moveTo(-250, -6); g.lineTo(250, -4); g.moveTo(-250, 10); g.lineTo(250, 12); g.stroke();
-    g.fillStyle = "#9a9aa0"; for (const nx of [-220, 220]) { circle(nx, -10, 4); circle(nx, 10, 4); }
-    g.restore();
-  }
-  fill("#0b1530", 0.3, "multiply");
-}
-
-
 function hammerAngle(lt, hits, hitA) {
   const next = hits.find(h => lt <= h + 0.08) ?? hits[hits.length - 1];
   return hitA - 0.9 * ease(clamp((next - lt) / 0.3));
 }
-
 
 // ---------------------------------------------------------------------------
 // Shots

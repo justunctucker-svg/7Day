@@ -2,7 +2,7 @@
 """Build the scratch voice-over for the animatic.
 
 Synthesizes each line with RHVoice, runs it through a per-character effect
-chain (radio, walkie, TV speaker, whisper), and writes animatic/vo/part-NN.js:
+chain (radio, walkie, in-room, TV speaker, whisper), and writes animatic/vo/part-NN.js:
 base64 MP3s the animatic loads without a server.
 
 Needs: RHVoice (rhvoice + rhvoice-english), sox, ffmpeg, numpy.
@@ -38,6 +38,12 @@ PARTS = {
         ("ward1", "alan", 88, "walkie", "You found it. Good."),
         ("ward2", "alan", 84, "walkie", "It isn't a person anymore... Shoot it."),
         ("ward3", "alan", 80, "walkie", "Good... Now you're ready."),
+    ]),
+    4: (10, [
+        ("ward1", "alan", 86, "walkie", "They heard the shot."),
+        ("ward2", "alan", 96, "walkie", "Ninety seconds. Go down... under the floor."),
+        ("ward3", "alan", 100, "walkie", "Don't stop. Whatever you hear."),
+        ("ward4", "alan", 78, "room", "Hello... Seven."),
     ]),
 }
 
@@ -111,6 +117,9 @@ def build(tmp, lid, voice, rate, chain, text, rng):
         write(fx, w)
         sh("sox", str(fx), str(tmp / f"{lid}_w.wav"), "highpass", "350", "treble", "+4", "reverb", "8", "gain", "-n", "-8")
         fx = tmp / f"{lid}_w.wav"
+    elif chain == "room":
+        # Ward in person: same voice and pitch as on the radio, no band-limiting, a little room
+        sh("sox", str(base), str(fx), "pitch", "-180", "highpass", "70", "compand", "0.02,0.2", "-60,-60,-30,-18,0,-8", "-3", "reverb", "22", "50", "45", "gain", "-n", "-3")
     elif chain in ("radio", "walkie"):
         # deeper, then an AM-radio band, driven speaker, flutter + static
         sh("sox", str(base), str(tmp / f"{lid}_b.wav"), "pitch", "-180", "highpass", "380", "lowpass", "2900", "overdrive", "14", "gain", "-n", "-4")
