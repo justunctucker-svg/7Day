@@ -23,6 +23,8 @@
   header p { margin: 0; color: var(--muted); }
   .stage { position: relative; background: #000; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
   canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+  .stage.vert { max-width: 405px; margin: 0 auto; }
+  .stage.vert canvas { aspect-ratio: 9 / 16; }
   .overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(0,0,0,.45); cursor: pointer; }
   .overlay span { padding: 12px 22px; border: 1px solid var(--accent); color: var(--accent); border-radius: 4px; letter-spacing: .12em; font-weight: 600; }
   .overlay[hidden] { display: none; }
@@ -57,7 +59,7 @@
     <p>Animatic v1 · 60 s · 24 fps boards</p>
   </header>
 
-  <div class="stage">
+  <div class="stage" id="stage">
     <canvas id="screen" width="1280" height="720" aria-label="Animatic playback"></canvas>
     <div class="overlay" id="overlay"><span>▶ PLAY WITH SOUND</span></div>
   </div>
@@ -77,6 +79,7 @@
     <button id="tVO" type="button" aria-pressed="false">Scratch VO (TTS)</button>
     <button id="tMute" type="button" aria-pressed="false">Mute SFX</button>
     <button id="tMark" type="button" aria-pressed="false">Mark match 00:03 ↔ 00:53</button>
+    <button id="tVert" type="button" aria-pressed="false">9:16 vertical</button>
   </div>
 
   <h2>Shot list</h2>
@@ -93,11 +96,19 @@
 const cv = document.getElementById("screen");
 const g = cv.getContext("2d");
 const W = 1280, H = 720, DUR = 60, FPS = 24;
+// 9:16 mode: a VW x H window of the 16:9 picture, rendered at 1080x1920
+const VW = 405, VS = 1920 / 720;
 
 const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp = (a, b, t) => a + (b - a) * t;
 const seg = (t, a, b) => clamp((t - a) / (b - a));
 const ease = t => t * t * (3 - 2 * t);
+// Ease between [time, value] keys (used for the 9:16 reframing pans)
+function keys(t, k) {
+  if (t <= k[0][0]) return k[0][1];
+  for (let i = 1; i < k.length; i++) if (t < k[i][0]) return lerp(k[i - 1][1], k[i][1], ease(seg(t, k[i - 1][0], k[i][0])));
+  return k[k.length - 1][1];
+}
 function rng(seed) { return () => (seed = (seed * 16807) % 2147483647) / 2147483647; }
 function circle(x, y, r) { g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill(); }
 function ellipse(x, y, rx, ry, rot = 0) { g.beginPath(); g.ellipse(x, y, rx, ry, rot, 0, Math.PI * 2); g.fill(); }
@@ -394,13 +405,17 @@ function apartment(t, o) {
   person(o.px ?? 860, 642, 1.75, { facing: o.face ?? 1, mug: o.mug, reach: o.reach, coat: "#46546a" });
 }
 
-function stamp(text, lt, opts = {}) {
-  const small = opts.small;
-  const k = small ? 1 : lerp(1.35, 1, ease(seg(lt, 0, 0.14)));
-  const a = small ? seg(lt, 0, 0.3) * (1 - seg(lt, opts.out - 0.4, opts.out)) : seg(lt, 0, 0.06);
+// In 9:16 mode stamps are collected during the shot pass and drawn on top of the crop.
+let STAMPS = null;
+function stamp(text, lt, so = {}) {
+  if (STAMPS) { STAMPS.push([text, lt, so]); return; }
+  const small = so.small;
+  const k = (small ? 1 : lerp(1.35, 1, ease(seg(lt, 0, 0.14)))) * (so.k || 1);
+  const a = small ? seg(lt, 0, 0.3) * (1 - seg(lt, so.out - 0.4, so.out)) : seg(lt, 0, 0.06);
   if (a <= 0) return;
   g.save(); g.globalAlpha = a;
-  g.translate(small ? 92 : 104, small ? 612 : 96); g.rotate(-0.035); g.scale(k, k);
+  const at = so.at || (small ? [92, 612] : [104, 96]);
+  g.translate(at[0], at[1]); g.rotate(-0.035); g.scale(k, k);
   g.font = `700 ${small ? 24 : 40}px "Courier New", ui-monospace, monospace`;
   const tw = g.measureText(text).width, pad = small ? 10 : 14, hh = small ? 38 : 58;
   g.fillStyle = "rgba(10,10,12,.45)"; g.fillRect(-pad, -hh / 2, tw + pad * 2, hh);
@@ -460,7 +475,7 @@ function door(k, shake, t) {
 // Shots
 // ---------------------------------------------------------------------------
 const SHOTS = [
-  { a: 0, b: 3, name: "Eye opens", desc: "ECU, black to pre-dawn. Breathing, clock.", draw(lt) {
+  { a: 0, b: 3, name: "Eye opens", vx: 640, desc: "ECU, black to pre-dawn. Breathing, clock.", draw(lt) {
     g.fillStyle = "#3b3740"; g.fillRect(0, 0, W, H);
     let open = ease(seg(lt, 0.5, 1.7));
     if (lt > 2.05 && lt < 2.3) open *= 0.1;
@@ -482,28 +497,29 @@ const SHOTS = [
     fill("#3f5a8e", 0.42, "multiply");
     fill("#000", 1 - seg(lt, 0, 0.9));
   } },
-  { a: 3, b: 5, name: "Puncture mark", desc: "CU forearm. Mark plant: rub, shrug, sleeve down.", mark: true, draw(lt) {
+  { a: 3, b: 5, name: "Puncture mark", vx: MARK.x, desc: "CU forearm. Mark plant: rub, shrug, sleeve down.", mark: true, draw(lt) {
     drawForearm({ grade: "dawn", glow: 0, pulse: 0, rub: seg(lt, 0.85, 0.95) * (1 - seg(lt, 1.35, 1.45)), rubPhase: lt, sleeve: ease(seg(lt, 1.45, 1.95)) });
   } },
-  { a: 5, b: 12, name: "Ordinary morning", desc: "WS apartment. Coffee, TV glance, skyline.", draw(lt, t) {
+  { a: 5, b: 12, name: "Ordinary morning", vx: lt => keys(lt, [[0, 380], [1.6, 380], [3.0, 800], [4.8, 800], [6, 1010]]), desc: "WS apartment. Coffee, TV glance, skyline.", draw(lt, t) {
     const reach = lt < 2.6 ? ease(seg(lt, 0.4, 1.2)) * (1 - ease(seg(lt, 2.0, 2.6))) : null;
     const mug = lt >= 2.6 ? ease(seg(lt, 3.6, 4.4)) * (1 - ease(seg(lt, 5.0, 5.6))) : null;
     apartment(t, { brew: true, px: lerp(800, 860, ease(seg(lt, 2.4, 3.2))), face: lt < 2.5 ? -1 : 1, reach, mug });
     stamp("DAY ONE", lt - 0.5, { small: true, out: 6.2 });
   } },
-  { a: 12, b: 15, name: "Breaking news", desc: "CU TV. Flicker into breaking graphic.", draw(lt, t) {
+  { a: 12, b: 15, name: "Breaking news", vx: 640, desc: "CU TV. Flicker into breaking graphic.", draw(lt, t) {
     g.fillStyle = "#0e0d0d"; g.fillRect(0, 0, W, H);
     const flick = lt < 0.9 ? (Math.floor(lt * 18) % 3 === 0 ? 1 : 0.6) : 0.08;
-    tvScreen(60, 40, 1160, 640, t, { breaking: lt > 0.55, static: flick });
+    if (opts.vert) { g.fillStyle = "#050505"; rrect(428, 236, 424, 249, 8); tvScreen(440, 248, 400, 225, t, { breaking: lt > 0.55, static: flick }); }
+    else tvScreen(60, 40, 1160, 640, t, { breaking: lt > 0.55, static: flick });
     if (lt > 0.55) glow(640, 360, 700, "rgba(220,40,30,1)", 0.12);
   } },
-  { a: 15, b: 18, name: "Sirens", desc: "WS. Daniel frozen, mug halfway. Smoke rises.", draw(lt, t) {
+  { a: 15, b: 18, name: "Sirens", vx: lt => keys(lt, [[0, 860], [1.0, 860], [2.3, 390]]), desc: "WS. Daniel frozen, mug halfway. Smoke rises.", draw(lt, t) {
     g.save(); const z = 1 + lt * 0.025; g.translate(640, 360); g.scale(z, z); g.translate(-640, -360);
     apartment(t, { breaking: true, smoke: ease(seg(lt, 0, 2.6)), mug: 0.55 });
     g.restore();
     fill("rgba(200,40,40,1)", 0.05 + 0.05 * Math.sin(t * 9) ** 2);
   } },
-  { a: 18, b: 21.5, name: "DAY 2: power dies", desc: "WS street, night. Lamps go dark one by one.", draw(lt) {
+  { a: 18, b: 21.5, name: "DAY 2: power dies", vx: lt => lerp(420, 860, lt / 3.5), desc: "WS street, night. Lamps go dark one by one.", draw(lt) {
     g.fillStyle = vgrad(0, H, ["#060a16", "#121a2e"]); g.fillRect(0, 0, W, H);
     const r = rng(42);
     for (let x = -20; x < W;) {
@@ -531,7 +547,7 @@ const SHOTS = [
     }
     stamp("DAY 2", lt - 0.1);
   } },
-  { a: 21.5, b: 24.6, name: "DAY 3: counting cans", desc: "MS counter, flashlight beam counts the cans.", draw(lt) {
+  { a: 21.5, b: 24.6, name: "DAY 3: counting cans", vx: lt => lerp(330, 850, seg(lt, 0.35, 2.8)), desc: "MS counter, flashlight beam counts the cans.", draw(lt) {
     g.fillStyle = "#07090f"; g.fillRect(0, 0, W, H);
     g.fillStyle = "#1b1611"; g.fillRect(0, 470, W, 250);
     g.fillStyle = "#2a221a"; g.fillRect(0, 456, W, 18);
@@ -551,7 +567,7 @@ const SHOTS = [
     g.restore();
     stamp("DAY 3", lt - 0.1);
   } },
-  { a: 24.6, b: 26.2, name: "DAY 5: two cans", desc: "CU cabinet opens on two cans.", draw(lt) {
+  { a: 24.6, b: 26.2, name: "DAY 5: two cans", vx: 610, desc: "CU cabinet opens on two cans.", draw(lt) {
     g.fillStyle = "#060709"; g.fillRect(0, 0, W, H);
     g.fillStyle = "#2a1f17"; g.fillRect(300, 110, 680, 500);
     g.fillStyle = "#1a130e"; g.fillRect(320, 130, 640, 460);
@@ -568,16 +584,17 @@ const SHOTS = [
     fill("#000", 0.25);
     stamp("DAY 5", lt - 0.1);
   } },
-  { a: 26.2, b: 28, name: "Scratching", desc: "MS front door. Scratching, rattle. He freezes.", draw(lt, t) {
+  { a: 26.2, b: 28, name: "Scratching", vx: 640, desc: "MS front door. Scratching, rattle. He freezes.", draw(lt, t) {
     const sc = scratchAmount(t);
     door(0.78, sc * Math.sin(t * 90), t);
     // Daniel frozen in the foreground, breathing
-    g.save(); g.translate(220, 760); const br = 1 + 0.012 * Math.sin(t * 6.5); g.scale(2.6, 2.6 * br);
+    const sk = opts.vert ? 1.8 : 2.6;
+    g.save(); g.translate(opts.vert ? 520 : 220, 760); const br = 1 + 0.012 * Math.sin(t * 6.5); g.scale(sk, sk * br);
     g.fillStyle = "#05070d"; ellipse(0, -150, 70, 120); circle(0, -270, 44);
     g.restore();
     stamp("DAY 5", 9);
   } },
-  { a: 28, b: 32, name: "DAY 6: stairwell", desc: "Clatter off right, infected turns; Daniel slips out.", draw(lt) {
+  { a: 28, b: 32, name: "DAY 6: stairwell", vx: lt => lerp(780, stairX(lt), ease(seg(lt, 1.3, 1.9))), desc: "Clatter off right, infected turns; Daniel slips out.", draw(lt) {
     g.fillStyle = "#0a0c12"; g.fillRect(0, 0, W, H);
     glow(1180, 120, 340, "rgba(170,40,30,1)", 0.25);
     g.fillStyle = "#191c25"; g.beginPath(); g.moveTo(1280, 250); g.lineTo(1280, 300);
@@ -601,15 +618,13 @@ const SHOTS = [
     const ix = 720 + ease(seg(lt, 1.4, 4)) * 260;
     person(ix, 602, 1.35, { pose: "hunch", facing: lerp(-1, 1, turn), coat: "#3d4a3e", skin: "#9aa38f", hair: "#1c1f1b", eyeGlow: true });
     // Daniel down the stairs, behind its back, to the exit
-    const p = seg(lt, 1.25, 2.9);
-    let dx, dy;
-    if (p < 1) { dx = lerp(1180, 420, p); dy = lerp(300, 602, p); } else { dx = lerp(420, 150, seg(lt, 2.9, 3.5)); dy = 602; }
+    const dx = stairX(lt), dy = lerp(300, 602, seg(lt, 1.25, 2.9));
     if (lt > 0.4) person(dx, dy, 1.25, { pose: "walk", phase: lt * 12, facing: -1, pack: true, coat: "#46546a" });
     fill("#0c1430", 0.35, "multiply");
     fill("#fffbe8", seg(lt, 3.55, 4));
     stamp("DAY 6", lt - 0.1);
   } },
-  { a: 32, b: 35, name: "Highway", desc: "EWS. Empty highway, city shrinking behind.", draw(lt, t) {
+  { a: 32, b: 35, name: "Highway", vx: 730, desc: "EWS. Empty highway, city shrinking behind.", draw(lt, t) {
     g.fillStyle = vgrad(0, 400, ["#a9c0d4", "#e6e2d4"]); g.fillRect(0, 0, W, 400);
     const k = lerp(1, 0.6, lt / 3), vx = 640, hz = 400;
     g.fillStyle = "#6a7180";
@@ -624,7 +639,7 @@ const SHOTS = [
     g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 2;
     for (let i = 0; i < 7; i++) { const x = ((i * 211 + t * 420) % (W + 200)) - 100, y = 120 + i * 70; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 90, y - 4); g.stroke(); }
   } },
-  { a: 35, b: 38, name: "DAY 8: farmhouse", desc: "Farmhouse on the horizon, golden hour.", draw(lt) {
+  { a: 35, b: 38, name: "DAY 8: farmhouse", vx: 600, desc: "Farmhouse on the horizon, golden hour.", draw(lt) {
     g.fillStyle = vgrad(0, 430, ["#4b3b6a", "#d9824a", "#f6c46a"]); g.fillRect(0, 0, W, 430);
     glow(900, 420, 260, "rgba(255,200,120,1)", 0.7); g.fillStyle = "#ffe4a0"; circle(900, 420, 46);
     g.fillStyle = vgrad(420, H, ["#c99a4a", "#7a5a2a"]); g.fillRect(0, 420, W, 300);
@@ -640,7 +655,7 @@ const SHOTS = [
     person(640, 700, lerp(1.5, 1.35, lt / 3), { pose: "walk", phase: lt * 8, pack: true, coat: "#2c3446", eye: false, facing: 1 });
     stamp("DAY 8", lt - 0.1);
   } },
-  { a: 38, b: 40, name: "DAY 9: still", desc: "WS interior, sunset through the window.", draw(lt) {
+  { a: 38, b: 40, name: "DAY 9: still", vx: 800, desc: "WS interior, sunset through the window.", draw(lt) {
     g.fillStyle = vgrad(0, H, ["#7a4a2c", "#4a2c1c"]); g.fillRect(0, 0, W, H);
     g.fillStyle = "#f6b45a"; g.fillRect(760, 140, 300, 320);
     g.strokeStyle = "#3a2216"; g.lineWidth = 12; g.strokeRect(760, 140, 300, 320);
@@ -659,10 +674,10 @@ const SHOTS = [
     fill("#ffb060", 0.18, "overlay");
     glow(1180, 200, 600, "rgba(255,190,110,1)", 0.25);
   } },
-  { a: 42, b: 45, name: "Asleep", desc: "WS night. Radio crackles to life on its own.", draw(lt, t) {
+  { a: 42, b: 45, name: "Asleep", vx: lt => keys(lt, [[0, 560], [0.9, 560], [2.4, 1000]]), desc: "WS night. Radio crackles to life on its own.", draw(lt, t) {
     nightRoom(t, { daniel: "lie", radio: lt > 0.8 ? 0.15 + 0.85 * heartbeat(t) : 0 });
   } },
-  { a: 45, b: 50, name: "The radio", desc: "CU radio. Ward: \"Daniel Hayes...\"", draw(lt, t) {
+  { a: 45, b: 50, name: "The radio", vx: lt => lerp(700, 930, ease(seg(lt, 0, 4.5))), desc: "CU radio. Ward: \"Daniel Hayes...\"", draw(lt, t) {
     g.fillStyle = "#07090f"; g.fillRect(0, 0, W, H);
     const v = 1 + 0.004 * Math.sin(t * 70) * (voiceActive(t) ? 1 : 0);
     g.save(); g.translate(640, 380); g.scale(v, v);
@@ -687,7 +702,7 @@ const SHOTS = [
     const up = ease(seg(lt, 0, 0.35));
     nightRoom(t, { daniel: up < 0.5 ? "lie" : "sit", radio: 0.15 + 0.85 * heartbeat(t), shift: (1 - up) * -40 });
   } },
-  { a: 51.5, b: 54.2, name: "Mark glows", desc: "CU forearm. Same framing as 00:03. Ward line 2.", mark: true, draw(lt, t) {
+  { a: 51.5, b: 54.2, name: "Mark glows", vx: MARK.x, desc: "CU forearm. Same framing as 00:03. Ward line 2.", mark: true, draw(lt, t) {
     drawForearm({ grade: "night", glow: 0.12 + 0.6 * ease(seg(lt, 0.2, 2.4)), pulse: 0.15 * heartbeat(t), rub: 0, sleeve: 0 });
   } },
   { a: 54.2, b: 55.2, name: "Recognition", desc: "CU Daniel. Dread.", draw(lt, t) {
@@ -696,7 +711,7 @@ const SHOTS = [
     fill("#1a2a5a", 0.55, "multiply");
     glow(700, 760, 420, TEAL, 0.35 + 0.3 * heartbeat(t));
   } },
-  { a: 55.2, b: 56, name: "Pulse", desc: "CU forearm. The mark pulses once, brighter.", mark: true, draw(lt) {
+  { a: 55.2, b: 56, name: "Pulse", vx: MARK.x, desc: "CU forearm. The mark pulses once, brighter.", mark: true, draw(lt) {
     drawForearm({ grade: "night", glow: 0.72, pulse: Math.exp(-(((lt - 0.25) / 0.14) ** 2)), rub: 0, sleeve: 0 });
   } },
   { a: 56, b: 56.6, name: "Silence", desc: "MS. Radio light dies. Room tone only.", draw(lt, t) {
@@ -714,8 +729,18 @@ const SHOTS = [
     fill("#1a2a5a", 0.6, "multiply");
     fill("#9fb4ff", 0.06, "lighter");
   } },
-  { a: 58.8, b: 60, name: "Title", desc: "PATIENT 07 — TO BE CONTINUED", draw(lt, t) {
+  { a: 58.8, b: 60, name: "Title", desc: "PATIENT 07 — TO BE CONTINUED", vover(lt, t) {
+    const a = ease(seg(lt, 0.15, 0.9));
+    g.save(); g.globalAlpha = a; g.textAlign = "center"; g.textBaseline = "middle";
+    g.fillStyle = "#e8e2d0"; g.font = "700 40px \"Courier New\", ui-monospace, monospace";
+    g.letterSpacing = "7px"; g.fillText("PATIENT 07", VW / 2 + 3, 340);
+    g.font = "400 13px \"Courier New\", ui-monospace, monospace"; g.letterSpacing = "5px"; g.fillStyle = "#8c93a0";
+    g.fillText("TO BE CONTINUED", VW / 2 + 2, 384);
+    g.restore();
+    glow(VW / 2 + 100, 340, 40, TEAL, 0.3 * a * heartbeat(t));
+  }, draw(lt, t) {
     g.fillStyle = "#000"; g.fillRect(0, 0, W, H);
+    if (opts.vert) return;
     const a = ease(seg(lt, 0.15, 0.9));
     g.save(); g.globalAlpha = a; g.textAlign = "center"; g.textBaseline = "middle";
     g.fillStyle = "#e8e2d0"; g.font = "700 64px \"Courier New\", ui-monospace, monospace";
@@ -727,6 +752,8 @@ const SHOTS = [
   } },
 ];
 SHOTS.forEach((s, i) => s.n = String(i + 1).padStart(2, "0"));
+
+function stairX(lt) { return lt < 2.9 ? lerp(1180, 420, seg(lt, 1.25, 2.9)) : lerp(420, 150, seg(lt, 2.9, 3.5)); }
 
 // Subtitles / VO
 const VO = [
@@ -750,35 +777,65 @@ const grain = (() => {
   x.putImageData(d, 0, 0); return c;
 })();
 
-const opts = { subs: true, burn: true, tts: false, mute: false, mark: false };
+const opts = { subs: true, burn: true, tts: false, mute: false, mark: false, vert: false };
 const shotAt = t => SHOTS.find(s => t >= s.a && t < s.b) || SHOTS[SHOTS.length - 1];
 
+const vframe = (s, lt) => clamp(typeof s.vx === "function" ? s.vx(lt) : (s.vx ?? 640), VW / 2, W - VW / 2);
+
 function renderShot(t) {
-  const s = shotAt(t);
-  g.save(); s.draw(t - s.a, t); g.restore();
+  const s = shotAt(t), lt = t - s.a, vert = opts.vert;
+  g.save();
+  if (vert) { g.setTransform(VS, 0, 0, VS, -(vframe(s, lt) - VW / 2) * VS, 0); STAMPS = []; }
+  s.draw(lt, t);
+  g.restore();
+  const stamps = STAMPS; STAMPS = null;
+  const fw = vert ? VW : W;
+  g.save(); if (vert) g.setTransform(VS, 0, 0, VS, 0, 0);
   // vignette + grain
-  const v = g.createRadialGradient(640, 360, 300, 640, 360, 820);
+  const v = g.createRadialGradient(fw / 2, 360, vert ? 200 : 300, fw / 2, 360, vert ? 520 : 820);
   v.addColorStop(0, "rgba(0,0,0,0)"); v.addColorStop(1, "rgba(0,0,0,.55)");
-  g.fillStyle = v; g.fillRect(0, 0, W, H);
+  g.fillStyle = v; g.fillRect(0, 0, fw, H);
   g.save(); g.globalAlpha = 0.05; g.globalCompositeOperation = "overlay";
   const fr = Math.floor(t * FPS);
   g.translate(-(fr * 37) % 256, -(fr * 91) % 256);
-  g.fillStyle = g.createPattern(grain, "repeat"); g.fillRect(0, 0, W + 256, H + 256);
+  g.fillStyle = g.createPattern(grain, "repeat"); g.fillRect(0, 0, fw + 256, H + 256);
+  g.restore();
+  // 9:16 overlays sit inside the platform safe zones (clear of the top bar and the caption/buttons area)
+  if (stamps) for (const [text, slt, so] of stamps) stamp(text, slt, { ...so, at: so.small ? [30, 452] : [36, 128], k: so.small ? 0.9 : 0.85 });
+  if (vert && s.vover) s.vover(lt, t);
   g.restore();
   return s;
+}
+
+function wrapText(text, maxW) {
+  const out = []; let line = "";
+  for (const w of text.split(" ")) {
+    const next = line ? line + " " + w : w;
+    if (line && g.measureText(next).width > maxW) { out.push(line); line = w; } else line = next;
+  }
+  if (line) out.push(line);
+  return out;
 }
 
 function drawSubs(t) {
   const v = VO.find(v => t >= v.a && t < v.b);
   if (!v) return;
-  const a = seg(t, v.a, v.a + 0.15) * (1 - seg(t, v.b - 0.15, v.b));
-  g.save(); g.globalAlpha = a; g.textAlign = "center"; g.textBaseline = "middle";
+  const a = seg(t, v.a, v.a + 0.15) * (1 - seg(t, v.b - 0.15, v.b)), vert = opts.vert;
+  const cx = vert ? VW / 2 : 640, y0 = vert ? 486 : 660, lh = vert ? 25 : 34;
+  g.save(); if (vert) g.setTransform(VS, 0, 0, VS, 0, 0);
+  g.globalAlpha = a; g.textAlign = "center"; g.textBaseline = "middle";
   const jit = v.radio ? (Math.sin(t * 53) * 1.5) : 0;
-  g.font = "600 13px system-ui"; g.fillStyle = v.radio ? "#8ff0d4" : "#c9c3b4";
-  g.fillText(v.who, 640, 626);
-  g.font = "italic 28px Georgia, serif"; g.fillStyle = "#f3efe4";
+  g.font = `italic ${vert ? 19 : 28}px Georgia, serif`;
+  const lines = vert ? wrapText(v.text, 340) : [v.text];
+  if (vert) { // backing box: vertical frames often put subtitles over bright set pieces
+    const bw = Math.max(...lines.map(l => g.measureText(l).width)) + 28;
+    g.fillStyle = "rgba(0,0,0,.42)"; rrect(cx - bw / 2, y0 - 40, bw, 54 + (lines.length - 1) * lh, 8);
+  }
+  g.font = `600 ${vert ? 10 : 13}px system-ui`; g.fillStyle = v.radio ? "#8ff0d4" : "#c9c3b4";
+  g.fillText(v.who, cx, y0 - (vert ? 26 : 34));
+  g.font = `italic ${vert ? 19 : 28}px Georgia, serif`; g.fillStyle = "#f3efe4";
   g.shadowColor = "rgba(0,0,0,.9)"; g.shadowBlur = 8;
-  g.fillText(v.text, 640 + jit, 660);
+  lines.forEach((l, i) => g.fillText(l, cx + jit, y0 + i * lh));
   g.restore();
 }
 
@@ -788,7 +845,8 @@ function tc(t) {
 }
 
 function drawBurn(t, s) {
-  g.save(); g.font = "13px ui-monospace, Menlo, Consolas, monospace"; g.textBaseline = "top";
+  g.save(); if (opts.vert) g.setTransform(VS, 0, 0, VS, 0, 0);
+  g.font = `${opts.vert ? 9 : 13}px ui-monospace, Menlo, Consolas, monospace`; g.textBaseline = "top";
   const label = `${tc(t)}  SH${s.n}  ${s.name.toUpperCase()}`;
   const w = g.measureText(label).width;
   g.fillStyle = "rgba(0,0,0,.55)"; g.fillRect(14, 14, w + 16, 22);
@@ -1018,7 +1076,11 @@ function seek(t) {
 let lastShot = null;
 function draw() {
   const t = now();
-  if (opts.mark) drawMarkCompare();
+  if (opts.mark) {
+    if (opts.vert) { g.fillStyle = "#0d0f13"; g.fillRect(0, 0, cv.width, cv.height); g.save(); g.setTransform(1080 / W, 0, 0, 1080 / W, 0, (1920 - H * 1080 / W) / 2); }
+    drawMarkCompare();
+    if (opts.vert) g.restore();
+  }
   else {
     const s = renderShot(Math.min(t, DUR - 0.0001));
     if (opts.subs) drawSubs(t);
@@ -1044,11 +1106,12 @@ function loop() {
 
 function setOpt(key, val) {
   opts[key] = val;
-  const id = { subs: "tSubs", burn: "tBurn", tts: "tVO", mute: "tMute", mark: "tMark" }[key];
+  const id = { subs: "tSubs", burn: "tBurn", tts: "tVO", mute: "tMute", mark: "tMark", vert: "tVert" }[key];
   $(id).setAttribute("aria-pressed", String(val));
   if (key === "mute") { if (val) stopAudio(); else if (playing) startAudio(now()); }
   if (key === "tts") { if (playing) startVO(now()); else stopVO(); }
   if (key === "mark" && val && playing) pause();
+  if (key === "vert") { cv.width = val ? 1080 : W; cv.height = val ? 1920 : H; $("stage").classList.toggle("vert", val); }
   draw();
 }
 
@@ -1060,6 +1123,7 @@ $("tBurn").addEventListener("click", () => setOpt("burn", !opts.burn));
 $("tVO").addEventListener("click", () => setOpt("tts", !opts.tts));
 $("tMute").addEventListener("click", () => setOpt("mute", !opts.mute));
 $("tMark").addEventListener("click", () => { overlay.hidden = true; setOpt("mark", !opts.mark); });
+$("tVert").addEventListener("click", () => setOpt("vert", !opts.vert));
 document.addEventListener("keydown", e => {
   if (e.target.tagName === "INPUT" && e.key !== " ") return;
   if (e.key === " ") { e.preventDefault(); playing ? pause() : play(); }
@@ -1068,9 +1132,10 @@ document.addEventListener("keydown", e => {
   else if (e.key === "Home") { e.preventDefault(); seek(0); }
 });
 
-// Deep link: #t=53 opens at that time (handy for review notes)
+// Deep link: #t=53 opens at that time (handy for review notes); #vert opens in 9:16
 const m = location.hash.match(/t=([\d.]+)/);
 if (m) { playhead = clamp(parseFloat(m[1]), 0, DUR); overlay.hidden = true; }
+if (/vert/.test(location.hash)) setOpt("vert", true);
 draw();
 requestAnimationFrame(loop);
 
