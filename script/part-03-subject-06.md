@@ -3,7 +3,7 @@
 **Format:** 2D animated short **Runtime:** ~60 seconds
 **Dialogue:** Ward only, over the walkie-talkie (radio treatment plus squelch, as in Part 2). Everything else is picture, SFX and music.
 
-**Status:** DRAFT for approval. No animatic yet.
+Playable animatic: [`animatic/part-03.html`](../animatic/part-03.html) (open in any browser, press Space).
 
 ---
 
@@ -23,6 +23,41 @@
 | 00:56–01:00 | **The hook** | The walkie, face-up on the floorboards, its LED steady teal. | Squelch. **Ward (calm, almost warm):** "Good. Now you're ready." Squelch. | `PATIENT 07 — TO BE CONTINUED` |
 
 ---
+
+## Shot list (as cut in the animatic)
+
+| # | In | Out | Shot | Notes |
+|---|---|---|---|---|
+| 01 | 00:00.0 | 00:01.2 | ECU the eye through the gap | Part 2's last image; the camera jolts as he jerks back |
+| 02 | 00:01.2 | 00:03.6 | Top-down, the torch | Dropped; rolls, beam spinning |
+| 03 | 00:03.6 | 00:04.6 | CU Daniel | Scrambling back in the passing beam |
+| 04 | 00:04.6 | 00:07.6 | Top-down, the gap | Grey fingers push up and pry; the board flexes |
+| 05 | 00:07.6 | 00:08.6 | MS shelves | A steel box tips off the top shelf |
+| 06 | 00:08.6 | 00:10.0 | Top-down, the box | Bursts open: oilcloth bundle, carton of rounds, tag; the beam settles |
+| 07 | 00:10.0 | 00:12.0 | CU the tag | "For 07. Only if it comes up. — W." |
+| 08 | 00:12.0 | 00:14.0 | Top-down | His hands peel back the oilcloth: a revolver |
+| 09 | 00:14.0 | 00:16.0 | CU revolver, side | Cylinder swung out: empty |
+| 10 | 00:16.0 | 00:19.2 | Insert, cylinder end-on | Round one (00:16.5), round two (00:17.3); the third slips (00:18.4) |
+| 11 | 00:19.2 | 00:20.4 | Top-down, the gap | The lost round rolls and drops into the gap |
+| 12 | 00:20.4 | 00:21.5 | Insert, cylinder end-on | Another round (00:20.9): three loaded |
+| 13 | 00:21.5 | 00:23.9 | CU revolver, side | Snapped shut (00:21.6). Ward 1 (00:21.8): "You found it. Good." |
+| 14 | 00:23.9 | 00:25.2 | Top-down | The board bursts upward |
+| 15 | 00:25.2 | 00:28.6 | WS closet, low angle | Subject 06 climbs out of the hole into the beam |
+| 16 | 00:28.6 | 00:29.5 | CU forearm | Part 1's arm framing; his mark pulses... |
+| 17 | 00:29.5 | 00:30.4 | CU Subject 06's chest | ...and its mark pulses on the same beat |
+| 18 | 00:30.4 | 00:32.4 | OTS standoff | His trembling hands on the revolver; it stands in the beam |
+| 19 | 00:32.4 | 00:34.4 | MS Subject 06 | Tilts its head; raises an open hand, palm up |
+| 20 | 00:34.4 | 00:38.0 | CU Daniel, under-lit | Ward 2 (00:34.6): "It isn't a person anymore... Shoot it." |
+| 21 | 00:38.0 | 00:40.6 | CU the wristband | PROJECT ECHO · SUBJECT 06 · WARD, E. |
+| 22 | 00:40.6 | 00:42.2 | ECU Daniel's eyes | Wristband... walkie... wristband |
+| 23 | 00:42.2 | 00:44.0 | Top-down, the walkie | LED on the heartbeat |
+| 24 | 00:44.0 | 00:45.4 | Top-down, the walkie | Feedback shriek, LED strobing |
+| 25 | 00:45.4 | 00:46.4 | Subject 06 lunges | Straight at the camera |
+| 26 | 00:46.4 | 00:48.6 | White, then black | One white frame on the shot; ringing |
+| 27 | 00:48.6 | 00:54.6 | Floor level, aftermath | Torch on the boards, smoke in the beam; its glow goes out |
+| 28 | 00:54.6 | 00:56.0 | CU forearm | Only his mark pulses now |
+| 29 | 00:56.0 | 00:58.9 | Top-down | Walkie and revolver on the boards. Ward 3 (00:56.3): "Good... Now you're ready." |
+| 30 | 00:58.9 | 01:00.0 | Black, title | `PATIENT 07 — TO BE CONTINUED` |
 
 ## Why it works as Part 3
 

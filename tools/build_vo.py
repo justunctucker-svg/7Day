@@ -34,6 +34,11 @@ PARTS = {
         ("ward2", "alan", 85, "walkie", "That mark is how they find you."),
         ("ward3", "alan", 88, "walkie", "Check the closet. I left you something."),
     ]),
+    3: (9, [
+        ("ward1", "alan", 88, "walkie", "You found it. Good."),
+        ("ward2", "alan", 84, "walkie", "It isn't a person anymore... Shoot it."),
+        ("ward3", "alan", 80, "walkie", "Good... Now you're ready."),
+    ]),
 }
 
 
